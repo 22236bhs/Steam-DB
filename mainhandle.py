@@ -1,4 +1,5 @@
 import sqlite3
+import steam_hours_update
 
 DATABASE = "steam_db.db"
 
