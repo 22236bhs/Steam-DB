@@ -1,4 +1,4 @@
-def gethours(YOUR_GAME_APP_ID):
+def gethours(game_ids):
     import requests
     import json
 
@@ -11,23 +11,19 @@ def gethours(YOUR_GAME_APP_ID):
     API_KEY = data["api_key"]
     STEAM_ID = data["steam_id"]
 
-    # URL for the GetOwnedGames API endpoint
     url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={STEAM_ID}&format=json'
-
-    # Make the HTTP request
     response = requests.get(url)
 
-    # Check if the request was successful
     if response.status_code == 200:
-        # Parse the JSON response
         data = response.json()
         
-        # Check if the response contains the playtime data
         if 'response' in data and 'games' in data['response']:
-            # Iterate over the games and find the one you're interested in
-            for game in data['response']['games']:
-                if game['appid'] == YOUR_GAME_APP_ID:
-                    return (game['playtime_forever'] / 60)
+                finallist = []
+                for game in data['response']['games']:
+                    for entry in game_ids:
+                        if game['appid'] == entry[1]:
+                            finallist.append((entry[0], round((game['playtime_forever'] / 60), 1)))
+                return finallist
     else:
         return False
         
