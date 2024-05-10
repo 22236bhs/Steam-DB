@@ -26,8 +26,8 @@ with sqlite3.connect(DATABASE) as f:
     cursor.execute(EXECUTE)
     results = cursor.fetchall()
 
-updatedatabasehours()
+#updatedatabasehours()
 
-#print(f"{"name":<40}{"hours":<8}studio\n")
-#for tup in results:
-    #print(f"{tup[0]:<40}{tup[1]:<8}{tup[2]}")
+print(f"{"name":<40}{"hours":<8}studio\n")
+for tup in results:
+    print(f"{tup[0]:<40}{tup[1]:<8}{tup[2]}")
