@@ -1,4 +1,5 @@
 def gethours(game_ids):
+    '''Takes the list argument of tuples [(id, game_id), ...] and returns a list [(id, hours), ...]'''
     import requests
     import json
 
