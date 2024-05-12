@@ -13,11 +13,10 @@ JOIN studios ON steam_library.studio_id = studios.id
 ORDER BY hours DESC;''')
 
 def updatedatabasehours():
-    with sqlite3.connect(DATABASE) as db:
-        cursor = db.cursor()
-        cursor.execute("SELECT id, game_id FROM steam_library;")
-        results = cursor.fetchall()
-        newresults = steam_hours_update.gethours(results)
+    execute = "SELECT id, game_id FROM steam_library;"
+    newresults = steam_hours_update.gethours(execute)
+    with sqlite3.connect("steam_db.db") as f:
+        cursor = f.cursor()
         for tup in newresults:
             cursor.execute(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
 
