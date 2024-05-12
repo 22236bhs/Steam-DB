@@ -34,11 +34,14 @@ def gettotalhours():
             total += entry[1]
         return total
 
-
-with sqlite3.connect(DATABASE) as f:
-    cursor = f.cursor()
-    cursor.execute(EXECUTE)
-    results = cursor.fetchall()
+def exequery(execute):
+    with sqlite3.connect(DATABASE) as f:
+        cursor = f.cursor()
+        cursor.execute(execute)
+        results = cursor.fetchall()
+        return results
+    
+results = exequery(EXECUTE)
 
 
 run = True
@@ -60,13 +63,10 @@ while run:
         elif inp == 2:
             print("Updating...")
             updatedatabasehours()
-            with sqlite3.connect(DATABASE) as f:
-                cursor = f.cursor()
-                cursor.execute(EXECUTE)
-                results = cursor.fetchall()
+            results = exequery(EXECUTE)
         elif inp == 3:
             total = gettotalhours()
-            print(f"Total hours: {total:1f} hours")
+            print(f"Total hours: {round(total, 1)} hours")
         elif inp == EXITNUM:
             run = False
             continue
