@@ -14,7 +14,8 @@ ORDER BY hours DESC;''')
 
 def updatedatabasehours():
     execute = "SELECT id, game_id FROM steam_library;"
-    newresults = steam_hours_update.gethours(execute)
+    results = exequery(execute)
+    newresults = steam_hours_update.gethours(results)
     with sqlite3.connect("steam_db.db") as f:
         cursor = f.cursor()
         for tup in newresults:
