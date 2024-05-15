@@ -11,11 +11,6 @@ DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""
 DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio", "steam_release_date": "Release date"}
 
 
-EXECUTE = ('''
-SELECT name, hours, studios.studio_name
-FROM steam_library
-JOIN studios ON steam_library.studio_id = studios.id
-ORDER BY hours DESC;''')
 
 def spacingcalc(string, key):
     if key not in DATASPACING:
@@ -116,15 +111,7 @@ def handleprint():
                     finalprint += spacingcalc(str(results[a][i]), userinp[i])
                 print(finalprint)
             
-
-            
-                
-
-            
-
     
-results = exequery(EXECUTE)
-
 
 run = True
 while run:
@@ -144,7 +131,6 @@ while run:
         elif inp == 2:
             print("Updating...")
             updatedatabasehours()
-            results = exequery(EXECUTE)
         elif inp == 3:
             print("Fetching data...")
             total = gettotalhours()
