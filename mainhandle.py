@@ -1,8 +1,8 @@
 import sqlite3
-import steam_hours_update
+import steam_handle
 
 
-
+#Constants
 DATABASE = "steam_db.db"
 EXITNUM = 4
 DATASPACING = {"name": 40, "hours": 8, "studios.studio_name": 25, "steam_release_date": 14}
@@ -19,10 +19,11 @@ def spacingcalc(string, key):
     else:
         if DATASPACING[key] - len(string) < 0:
             return string
-        final = ""
-        final += string
-        final += (" " * (DATASPACING[key] - len(string)))
-        return final
+        else:
+            final = ""
+            final += string
+            final += (" " * (DATASPACING[key] - len(string)))
+            return final
         
 
 
@@ -30,7 +31,7 @@ def updatedatabasehours():
     '''Updates the database with the user's current Steam hours'''
     execute = "SELECT id, game_id FROM steam_library;"
     results = exequery(execute)
-    newresults = steam_hours_update.gethours(results)
+    newresults = steam_handle.gethours(results)
     with sqlite3.connect("steam_db.db") as f:
         cursor = f.cursor()
         for tup in newresults:
@@ -39,15 +40,12 @@ def updatedatabasehours():
             
 def gettotalhours():
     '''Returns the total hours of the database entries through STEAM (not through the db file)'''
-    with sqlite3.connect(DATABASE) as db:
-        cursor = db.cursor()
-        cursor.execute("SELECT id, game_id FROM steam_library;")
-        results = cursor.fetchall()
-        results2 = steam_hours_update.gethours(results)
-        total = 0
-        for entry in results2:
-            total += entry[1]
-        return total
+    results = exequery("SELECT id, game_id FROM steam_library;")
+    results2 = steam_handle.gethours(results)
+    total = 0
+    for entry in results2:
+        total += entry[1]
+    return total
 
 def exequery(execute):
     '''Executes given query in the database'''
