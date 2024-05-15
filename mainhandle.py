@@ -5,7 +5,7 @@ import steam_hours_update
 
 DATABASE = "steam_db.db"
 EXITNUM = 4
-DATASPACING = {"name": 40, "hours": 8, "studios.studio_name": 25, "steam_release_date": 12}
+DATASPACING = {"name": 40, "hours": 8, "studios.studio_name": 25, "steam_release_date": 14}
 DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_release_date"}
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""}
 DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio", "steam_release_date": "Release date"}
@@ -13,6 +13,7 @@ DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio"
 
 
 def spacingcalc(string, key):
+    '''Uses the given key to determine how much space should be left after the string and returns it'''
     if key not in DATASPACING:
         return False
     else:
@@ -26,6 +27,7 @@ def spacingcalc(string, key):
 
 
 def updatedatabasehours():
+    '''Updates the database with the user's current Steam hours'''
     execute = "SELECT id, game_id FROM steam_library;"
     results = exequery(execute)
     newresults = steam_hours_update.gethours(results)
@@ -48,6 +50,7 @@ def gettotalhours():
         return total
 
 def exequery(execute):
+    '''Executes given query in the database'''
     with sqlite3.connect(DATABASE) as f:
         cursor = f.cursor()
         cursor.execute(execute)
@@ -56,8 +59,9 @@ def exequery(execute):
 
 
 def handleprint():
+    '''Handles printing out data based on user inputs'''
     print("\nWhat data to print?\n(Type the corresponding numbers seperated by a space)\n")
-    print("1. Name\n2. Studio\n3. Hours\n4. Steam release date\n")
+    print("1. Name\n2. Studio\n3. Hours\n4. Steam release date\n5. All\n")
     userinp = input("> ")
     if not userinp:
         print("Invalid input, try again")
@@ -65,14 +69,21 @@ def handleprint():
     else:
         userinp = userinp.split()
         try:
+            final = []
             for i in range(len(userinp)):
                 userinp[i] = int(userinp[i])
+                if userinp[i] not in final:
+                    final.append(userinp[i])
+            userinp = final
                 
         except:
             print("Invalid input, try again")
             return False
         try:
             for i in range(len(userinp)):
+                if userinp[i] == 5:
+                    userinp = ['name', 'studios.studio_name', 'hours', 'steam_release_date']
+                    break
                 userinp[i] = DATAKEYPRINT[userinp[i]]
         except:
             print("Invalid number, try again")
@@ -93,11 +104,11 @@ def handleprint():
         if sort not in DATAKEYSORT:
             print("Invalid number, try again")
             return False
-        else:
-                
+        else:  
             sqlrun += " JOIN studios ON steam_library.studio_id = studios.id"
             if DATAKEYSORT[sort]:
-                sqlrun += f" ORDER BY {DATAKEYSORT[sort]};"
+                sqlrun += f" ORDER BY {DATAKEYSORT[sort]}"
+            sqlrun += ";"
             results = exequery(sqlrun)
             tup = results[0]
             size = len(tup)
