@@ -5,7 +5,7 @@ import steam_handle
 #Constants
 DATABASE = "steam_db.db"
 EXITNUM = 4
-DATASPACING = {"name": 40, "hours": 8, "studios.studio_name": 25, "steam_release_date": 14}
+DATASPACING = {"name": 60, "hours": 8, "studios.studio_name": 25, "steam_release_date": 14}
 DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_release_date"}
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""}
 DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio", "steam_release_date": "Release date"}

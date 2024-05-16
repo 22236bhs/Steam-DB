@@ -1,17 +1,24 @@
+import requests
+import json
+with open("data.json") as f:
+    data = json.load(f)
+
+# Note: data.json is a hidden json file containing the steam id and api key
+# Format:  {"steam_id": "id", "api_key": "key"}
+API_KEY = data["api_key"]
+STEAM_ID = data["steam_id"]
+
+months = {"jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
+          "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12"}
+days = {"1": "01", "2": "02", "3": "03", "4": "04", "5": "05", "6": "06", "7": "07", "8": "08",
+        "9": "09"}
+
+
 def gethours(game_ids):
     '''Takes the list argument of tuples [(id, game_id), ...]
        and returns a list of tuples [(id, hours), ...]'''
-    import requests
-    import json
-
-    # Note: data.json is a hidden json file containing the steam id and api key
-    # Format:  {"steam_id": "id", "api_key": "key"}
-
-    with open("data.json") as f:
-        data = json.load(f)
     
-    API_KEY = data["api_key"]
-    STEAM_ID = data["steam_id"]
+
 
     url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={STEAM_ID}&format=json'
     response = requests.get(url)
@@ -28,4 +35,88 @@ def gethours(game_ids):
                 return finallist
     else:
         return False
+
+
+
+def get_game_details(appid, language='english'):
+    '''Returns the release date in two forms and the developer of the given appid'''
+    url = f'https://store.steampowered.com/api/appdetails'
+    params = {
+        'appids': appid,
+        'cc': 'us',  
+        'l': language  
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    if str(appid) in data and data[str(appid)]['success']:
+        details = data[str(appid)]['data']
+        release_date = details.get('release_date', {}).get('date')
+        developer = details.get('developers', [])
         
+        return {
+            'release_date': convertdate(release_date),
+            'developer': developer[0],
+        }
+    return None
+
+def convertdate(date):
+    '''Converts month day, year to a tuple containing (dd/mm/yyyy, yyyymmdd)'''
+    date = date.replace(",", "")
+    date = date.split()
+    date = [date[1], date[0], date[2]]
+    date[1] = months[(date[1].lower())]
+    if date[0] in days:
+        date[0] = days[date[0]]
+    strdate = "/".join(date)
+    intdate = int(date[2] + date[1] + date[0])
+    return {"strdate": strdate, "intdate": intdate}
+
+
+
+def getbasicdata():
+    '''Gets the appid, name and hours of the user's steam library'''
+    global API_KEY, STEAM_ID
+    url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
+
+    params = {
+        'key': API_KEY,
+        'steamid': STEAM_ID,
+        'format': 'json',
+        'include_appinfo': True,  
+        'include_played_free_games': True  
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    if 'response' in data and 'games' in data['response']:
+        games = data['response']['games']
+        list = []
+        for game in games:
+            tup = {}
+            appid = game.get('appid')
+            name = game.get('name')
+            playtime_forever = game.get('playtime_forever')
+            
+            playtime_forever = round((playtime_forever / 60), 1)
+            if playtime_forever >= 1:
+                tup["appid"] = appid
+                tup["name"] = name
+                tup["playtime"] = playtime_forever
+                list.append(tup)
+        return list
+                
+    else:
+        return None
+
+def compiledata():
+    '''Accesses the getbasicdata and get_game_details functions and combines their data'''
+    basicdata = getbasicdata()
+    if basicdata:
+        for i in range(len(basicdata)):
+            moredetails = get_game_details(basicdata[i]["appid"])
+            basicdata[i]["release_date"] = moredetails["release_date"]
+            basicdata[i]["developer"] = moredetails["developer"]
+        return basicdata
+    else:
+        return None
