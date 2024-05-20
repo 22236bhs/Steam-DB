@@ -1,5 +1,7 @@
 import steam_handle, sqlite3
 
+dbname = "db_test.db"
+
 def cleanse(list):
     '''Cleanses the names in the list of any strange characters like a trademark'''
     validchar = "qwertyuiopasdfghjklzxcvbnm1234567890!@#$%^&*()`~[]}{|;\':\"\\,./<>? "
@@ -12,14 +14,14 @@ def cleanse(list):
         game['name'] = newname
     return list
 
-def makedb():
+def makedb(makedb):
     '''Makes a databse, if it doesn't exist, of the user's steam library'''
     try:
-        with open('db_test.db') as check:
+        with open(makedb) as check:
             pass
     except:
 
-        with sqlite3.connect('db_test.db') as db:
+        with sqlite3.connect(makedb) as db:
             print("Creating database...")
             cursor = db.cursor()
             cursor.execute('CREATE TABLE IF NOT EXISTS studios (id INTEGER PRIMARY KEY, studio_name TEXT)')
@@ -58,4 +60,3 @@ def makedb():
                 cursor.execute(f"UPDATE steam_library SET studio_id = {devsdict[data["developer"]]} WHERE game_id = {data["appid"]}")
             print("Database finished.")
 
-makedb()

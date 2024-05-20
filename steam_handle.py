@@ -1,10 +1,12 @@
 import requests
 import json
+import make_db
 with open("data.json") as f:
     data = json.load(f)
 
 # Note: data.json is a hidden json file containing the steam id and api key
 # Format:  {"steam_id": "id", "api_key": "key"}
+# Where "id" is replaced with the steam id and "key" is replaced with the api key 
 API_KEY = data["api_key"]
 STEAM_ID = data["steam_id"]
 
@@ -120,3 +122,12 @@ def compiledata():
         return basicdata
     else:
         return None
+
+def testid(id):
+    url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={id}&format=json'
+    response = requests.get(url)
+    if response.status_code == 200:
+        return True
+    else:
+        return False
+
