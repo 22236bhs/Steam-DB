@@ -25,6 +25,7 @@ def exequery(execute):
 
 
 def errorcheck(i):
+    '''Checks the argument for the error code'''
     if i == 1:
         return False
     else:
@@ -32,10 +33,12 @@ def errorcheck(i):
 
 
 def errorhandle():
+    '''Prints out an error statement'''
     print("Connection errors detected...")
 
 
 def setupdataspacing():
+    '''Setup the spacing of printing of the studio name and game name'''
     global dataspacing
     maxnamelength = 0
     maxstudiolength = 0
@@ -93,6 +96,7 @@ def updatedatabasehours():
 
 
 def searchdata():
+    '''Searches the database for custom matches'''
     selectuserinp = True
     while selectuserinp:
         print('''\nChoose what to search by
@@ -117,7 +121,7 @@ def searchdata():
             elif userinp == 2:
                 search = f"WHERE studios.studio_name LIKE \"%"
                 join = "%\""
-                order = " ORDER BY studios.studio_name ASC;"
+                order = " ORDER BY studios.studio_name_lower ASC;"
             elif userinp == 3:
                 search = "WHERE steam_library.hours >= "
                 join = ""
@@ -207,6 +211,7 @@ def gettotalhours():
 
 
 def settings():
+    '''Settings section of the interface'''
     global datajson
     BACKNUM = 3
     print(f'''\n1. Change steam id
@@ -339,7 +344,10 @@ def handleprint():
                 for i in range(size):
                     finalprint += spacingcalc(str(results[a][i]), userinp[i])
                 print(finalprint)
+
+
 def filechecks():
+
     dbcheck = True    
     while dbcheck:
         try:
@@ -381,6 +389,10 @@ def filechecks():
                         continue
                     break
                 newapikey = input("Enter your api_key (Type 'quit' to quit)").lower()
+        else:
+            with open("data.json") as test:
+                dbcheck = False
+                continue
                 
 
                         

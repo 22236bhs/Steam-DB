@@ -133,6 +133,7 @@ def compiledata():
         return None
 
 def testid(id):
+    '''Tests if the argument is a valid steam id'''
     url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={id}&format=json'
     try:
         response = requests.get(url)

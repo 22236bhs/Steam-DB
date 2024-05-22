@@ -3,6 +3,7 @@ import steam_handle, sqlite3
 dbname = "db_test.db"
 
 def errorcheck(i):
+    '''Checks the argument for the error code'''
     if i == 1:
         return False
     else:
@@ -31,7 +32,7 @@ def makedb(makedb):
         with sqlite3.connect(makedb) as db:
             print("Creating database...")
             cursor = db.cursor()
-            cursor.execute('CREATE TABLE IF NOT EXISTS studios (id INTEGER PRIMARY KEY, studio_name TEXT)')
+            cursor.execute('CREATE TABLE IF NOT EXISTS studios (id INTEGER PRIMARY KEY, studio_name TEXT, studio_name_lower TEXT)')
             cursor.execute('''CREATE TABLE IF NOT EXISTS steam_library (
     id INTEGER PRIMARY KEY,
     name TEXT,
@@ -57,7 +58,7 @@ def makedb(makedb):
                 if data['developer'] not in studiolist:
                     studiolist.append(data['developer'])
             for dev in studiolist:
-                cursor.execute("INSERT INTO studios (studio_name) VALUES (?)", (dev,))
+                cursor.execute("INSERT INTO studios (studio_name, studio_name_lower) VALUES (?, ?)", (dev, dev.lower()))
             cursor.execute("SELECT id, studio_name FROM studios;")
             devs = cursor.fetchall()
             devsdict = {}
