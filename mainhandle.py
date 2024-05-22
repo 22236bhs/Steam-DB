@@ -1,6 +1,8 @@
 import sqlite3, json, os
 import steam_handle
 
+os.chdir("C:/Users/ojkit/Documents/Steam DB")
+
 #Constants
 DATABASE = "steam_db.db"
 EXITNUM = 6
@@ -20,6 +22,18 @@ def exequery(execute):
         cursor.execute(execute)
         results = cursor.fetchall()
         return results
+
+
+def errorcheck(i):
+    if i == 1:
+        return False
+    else:
+        return True
+
+
+def errorhandle():
+    print("Connection errors detected...")
+
 
 def setupdataspacing():
     global dataspacing
@@ -42,6 +56,11 @@ def setupdataspacing():
 
 setupdataspacing()
 
+def convertdate(date):
+    '''Recieves the arguments DD/MM/YYYY and returns YYYYMMDD'''
+    date = date.split("/")
+    date = date[2] + date[1] + date[0]
+    return date
 
 
 def spacingcalc(string, key):
@@ -64,6 +83,9 @@ def updatedatabasehours():
     execute = "SELECT id, game_id FROM steam_library;"
     results = exequery(execute)
     newresults = steam_handle.gethours(results)
+    if not errorcheck(newresults):
+        errorhandle()
+        return 0
     with sqlite3.connect("steam_db.db") as f:
         cursor = f.cursor()
         for tup in newresults:
@@ -71,53 +93,117 @@ def updatedatabasehours():
 
 
 def searchdata():
-    print("Choose what to search by\n1. Name\n2. Studio\n3. Greater than X hours\n4. Less than X hours\n")
-    userinp = input("> ")
-    try:
-        userinp = int(userinp)
-    except:
-        print("Invalid input")
-    else:
-        if userinp == 1:
-            search = f"WHERE steam_library.lower_name LIKE \"%"
-            join = "%\";"
-        elif userinp == 2:
-            search = f"WHERE studios.studio_name LIKE \"%"
-            join = "%\";"
-        elif userinp == 3:
-            search = "WHERE hours >= "
-            join = ";"
-        elif userinp == 4:
-            search = "WHERE hours <= "
-            join = ";"
+    selectuserinp = True
+    while selectuserinp:
+        print('''\nChoose what to search by
+    1. Name
+    2. Studio
+    3. Greater than X hours
+    4. Less than X hours
+    5. Before release date
+    6. After release date''')
+        userinp = input("> ")
+        try:
+            userinp = int(userinp)
+        except:
+            print("Invalid input")
         else:
-            print("Invalid option")
-            return 0
-        print("\nType what to search")
-        tosearch = input("> ")
-        search += tosearch
-        search += join
-        results = exequery(f'''SELECT steam_library.name, steam_library.hours, studios.studio_name, steam_library.steam_release_date
-FROM steam_library
-JOIN studios ON studios.id = steam_library.studio_id                       
-{search}''')
-        print("Results:\n")
-        print(f"{spacingcalc("Name", "name")}{spacingcalc("Hours", "hours")}", end='')
-        print(f"{spacingcalc("Studio", "studios.studio_name")}{spacingcalc("Release date", "steam_release_date")}\n")
-        for result in results:
-            print(f"{spacingcalc(result[0], "name")}{spacingcalc(str(result[1]), "hours")}", end='')
-            print(f"{spacingcalc(result[2], "studios.studio_name")}{spacingcalc(result[3], "steam_release_date")}")
-        
+            date = False
+            integer = False
+            if userinp == 1:
+                search = f"WHERE steam_library.lower_name LIKE \"%"
+                join = "%\""
+                order = " ORDER BY steam_library.lower_name ASC;"
+            elif userinp == 2:
+                search = f"WHERE studios.studio_name LIKE \"%"
+                join = "%\""
+                order = " ORDER BY studios.studio_name ASC;"
+            elif userinp == 3:
+                search = "WHERE steam_library.hours >= "
+                join = ""
+                order = " ORDER BY steam_library.hours DESC;"
+                integer = True
+            elif userinp == 4:
+                search = "WHERE steam_library.hours <= "
+                join = ""
+                order = " ORDER BY steam_library.hours DESC;"
+                integer = True
+            elif userinp == 5:
+                search = "WHERE steam_library.date_order <= "
+                join = ""
+                order = " ORDER BY steam_library.date_order DESC;"
+                date = True
+            elif userinp == 6:
+                search = "WHERE steam_library.date_order >= "
+                join = ""
+                order = " ORDER BY steam_library.date_order DESC"
+                date = True
+
+            else:
+                print("Invalid option")
+                return 0
+            
+
+            setuptosearch = True
+            while setuptosearch:
+                print("\nType what to search")
+                if not date and not integer:
+                    tosearch = input("> ")
+                elif date:
+                    tosearch = input("Enter the date in the format (DD/MM/YYYY)\nEnter \"back\" to go back\n> ").lower()
+                    try:
+                        if tosearch == "back":
+                            setuptosearch = False
+                            continue
+                        tosearch = convertdate(tosearch)
+                        if len(tosearch) != 8:
+                            print("Invalid date")
+                            continue
+                    except:
+                        print("Invalid date")
+                        continue
+                elif integer:
+                    tosearch = input("Enter \"back\" to go back\n> ").lower()
+                    try:
+                        if tosearch == "back":
+                            setuptosearch = False
+                            continue
+                        tosearch = int(tosearch)
+                        tosearch = str(tosearch)
+                    except:
+                        print("Invalid input")
+                        continue
+                
+                search += tosearch
+                search += join
+                results = exequery(f'''SELECT steam_library.name, steam_library.hours, studios.studio_name, steam_library.steam_release_date
+    FROM steam_library
+    JOIN studios ON studios.id = steam_library.studio_id                       
+    {search}
+    {order}''')
+                print("Results:\n")
+                print(f"{spacingcalc("Name", "name")}{spacingcalc("Hours", "hours")}", end='')
+                print(f"{spacingcalc("Studio", "studios.studio_name")}{spacingcalc("Release date", "steam_release_date")}\n")
+                for result in results:
+                    print(f"{spacingcalc(result[0], "name")}{spacingcalc(str(result[1]), "hours")}", end='')
+                    print(f"{spacingcalc(result[2], "studios.studio_name")}{spacingcalc(result[3], "steam_release_date")}")
+                setuptosearch = False
+                selectuserinp = False
+            
 
             
 def gettotalhours():
     '''Returns the total hours of the database entries through STEAM (not through the db file)'''
     results = exequery("SELECT id, game_id FROM steam_library;")
     results2 = steam_handle.gethours(results)
+    if not errorcheck(results2):
+        errorhandle()
+        return 0
     total = 0
     for entry in results2:
         total += entry[1]
-    return total
+    print(f"Total hours: {round(total, 1)} hours")
+    
 
 
 def settings():
@@ -142,7 +228,11 @@ def settings():
                 print("Invalid input")
                 return 0
             else:
-                if steam_handle.testid(str(steamid)):
+                idtest = steam_handle.testid(str(steamid))
+                if not errorcheck(idtest):
+                    errorhandle()
+                    return 0
+                if idtest:
                     print("Steam id updated")
                     datajson["steam_id"] = str(steamid)
                     with open("data.json", 'w') as js:
@@ -166,12 +256,15 @@ Note: (Only games with more than 1 hour played will be added to the new database
                     os.remove("db_test.db")
                 except:
                     pass
-                steam_handle.make_db.makedb("db_test.db")
+                check = steam_handle.make_db.makedb("db_test.db")
+                if not errorcheck(check):
+                    errorhandle()
+                    return 0
                 setupdataspacing()
             else:
                 print("Invalid input")
-            
-            
+
+
 
                         
 
@@ -246,8 +339,56 @@ def handleprint():
                 for i in range(size):
                     finalprint += spacingcalc(str(results[a][i]), userinp[i])
                 print(finalprint)
+def filechecks():
+    dbcheck = True    
+    while dbcheck:
+        try:
+            with open(DATABASE) as test:
+                pass
+        except:
+            print("No database found.\nCreate a database?\n(Y/N)\n")
+            proceed = input("> ").lower()
+            if proceed == "y":
+                pass
+            elif proceed == "n":
+                quit()
+            else:
+                print("Invalid input")
+                continue
+            try:
+                with open("data.json") as test:
+                    pass
+            except:
+                test = open("data.json", "w")
+                json.dump({"steam_id": "", "api_key": ""}, test)
+                test.close()
+                while True:
+                    newsteamid = input("Enter your steam id (Type 'quit' to quit)").lower()
+                    if newsteamid == "quit":
+                        quit()
+                    try:
+                        newsteamid = int(newsteamid)
+                        newsteamid = str(newsteamid)
+                    except:
+                        print("Invalid input")
+                        continue
+                    idtest = steam_handle.testid(newsteamid)
+                    if not errorcheck(idtest):
+                        errorhandle()
+                        quit()
+                    if not idtest:
+                        print("Invalid Steam id")
+                        continue
+                    break
+                newapikey = input("Enter your api_key (Type 'quit' to quit)").lower()
+                
+
+                        
 
 
+
+
+            
 run = True
 while run:
     print(f'''\nMake your choice:
@@ -272,8 +413,7 @@ while run:
             updatedatabasehours()
         elif inp == 4:
             print("Fetching data...")
-            total = gettotalhours()
-            print(f"Total hours: {round(total, 1)} hours")
+            gettotalhours()
         elif inp == 5:
             settings()
         elif inp == EXITNUM:

@@ -2,6 +2,12 @@ import steam_handle, sqlite3
 
 dbname = "db_test.db"
 
+def errorcheck(i):
+    if i == 1:
+        return False
+    else:
+        return True
+
 def cleanse(list):
     '''Cleanses the names in the list of any strange characters like a trademark'''
     validchar = "qwertyuiopasdfghjklzxcvbnm1234567890!@#$%^&*()`~[]}{|;\':\"\\,./<>? "
@@ -20,7 +26,8 @@ def makedb(makedb):
         with open(makedb) as check:
             pass
     except:
-
+        if not errorcheck(steam_handle.gethours([])):
+            return 1
         with sqlite3.connect(makedb) as db:
             print("Creating database...")
             cursor = db.cursor()

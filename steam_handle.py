@@ -23,7 +23,10 @@ def gethours(game_ids):
 
 
     url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={STEAM_ID}&format=json'
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
+    except Exception as e:
+        return 1
 
     if response.status_code == 200:
         data = response.json()
@@ -48,7 +51,11 @@ def get_game_details(appid, language='english'):
         'cc': 'us',  
         'l': language  
     }
-    response = requests.get(url, params=params)
+    try:
+        response = requests.get(url, params=params)
+    except:
+        return 1
+    
     data = response.json()
     if str(appid) in data and data[str(appid)]['success']:
         details = data[str(appid)]['data']
@@ -87,8 +94,10 @@ def getbasicdata():
         'include_appinfo': True,  
         'include_played_free_games': True  
     }
-
-    response = requests.get(url, params=params)
+    try:
+        response = requests.get(url, params=params)
+    except:
+        return 1
     data = response.json()
 
     if 'response' in data and 'games' in data['response']:
@@ -125,7 +134,10 @@ def compiledata():
 
 def testid(id):
     url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={id}&format=json'
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
+    except:
+        return 1
     if response.status_code == 200:
         return True
     else:
