@@ -1,4 +1,6 @@
-import steam_handle, sqlite3
+import steam_handle, sqlite3, os
+
+os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
 dbname = "db_test.db"
 

@@ -1,8 +1,10 @@
 import requests
-import json
+import json, os
 import make_db
 with open("data.json") as f:
     data = json.load(f)
+
+os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
 # Note: data.json is a hidden json file containing the steam id and api key
 # Format:  {"steam_id": "id", "api_key": "key"}
