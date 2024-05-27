@@ -1,10 +1,12 @@
+'''File for input/output operations'''
 import sqlite3, json, os
-import steam_handle
+import steam_handle, make_db
 
 os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
 #Constants
-DATABASE = "steam_db.db"
+DATABASE = "db_test.db"
+TESTDB = "db_test.db"
 EXITNUM = 6
 DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_release_date"}
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""}
@@ -24,12 +26,19 @@ def exequery(execute):
         return results
 
 
-def errorcheck(i):
+def errorcheck(i, prnt):
     '''Checks the argument for the error code'''
-    if i == 1:
-        return False
-    else:
+    errordict = {10: {"code": "No internet connection detected"},
+                 11: {"code": "Error regarding WiFi network"},
+                 12: {"code": "Error regarding network response"}}
+    if i in errordict:
+        if prnt:
+            print(errordict[i]["code"])
         return True
+    else:
+        return False
+
+
 
 
 def errorhandle():
@@ -44,6 +53,8 @@ def setupdataspacing():
     maxstudiolength = 0
     maxhourlength = 0
     try:
+        with open(DATABASE) as test:
+            pass
         results = exequery("SELECT name, studios.studio_name, hours FROM steam_library JOIN studios ON steam_library.studio_id = studios.id;")
         for result in results:
             if len(result[0]) > maxnamelength:
@@ -90,8 +101,7 @@ def updatedatabasehours():
     execute = "SELECT id, game_id FROM steam_library;"
     results = exequery(execute)
     newresults = steam_handle.gethours(results)
-    if not errorcheck(newresults):
-        errorhandle()
+    if errorcheck(newresults, True):
         return 0
     with sqlite3.connect("steam_db.db") as f:
         cursor = f.cursor()
@@ -211,8 +221,7 @@ def gettotalhours():
     '''Returns the total hours of the database entries through STEAM (not through the db file)'''
     results = exequery("SELECT id, game_id FROM steam_library;")
     results2 = steam_handle.gethours(results)
-    if not errorcheck(results2):
-        errorhandle()
+    if errorcheck(results2, True):
         return 0
     total = 0
     for entry in results2:
@@ -254,8 +263,7 @@ def settings():
                 return 0
             else:
                 idtest = steam_handle.testid(str(steamid))
-                if not errorcheck(idtest):
-                    errorhandle()
+                if errorcheck(idtest, True):
                     return 0
                 if idtest:
                     print("Steam id updated")
@@ -271,21 +279,23 @@ def settings():
                 
         elif userinp == 2:
             print('''\nAre you sure you want to redo the database?
-The old database with be DELETED and replaced with a new one.
+THe old data will be DELETED and replaced with new data.
 Note: (Only games with more than 1 hour played will be added to the new database)\n''')
             proceed = input("Proceed? (Y/N)\n> ").lower()
             if proceed == "n":
                 return 0
             elif proceed == "y":
-                try:
-                    os.remove("db_test.db")
-                except:
-                    pass
-                check = steam_handle.make_db.makedb("db_test.db")
-                if not errorcheck(check):
+                if steam_handle.testconnection():
+                    make_db.deletetables(TESTDB)
+                    with sqlite3.connect(TESTDB) as test:
+                        pass
+                    check = make_db.makedb(TESTDB)
+                    if errorcheck(check, True):
+                        return 0
+                    setupdataspacing()
+                else:
                     errorhandle()
-                    return 0
-                setupdataspacing()
+
             else:
                 print("Invalid input")
 
@@ -413,8 +423,7 @@ def filechecks():
                         print("Invalid input")
                         continue
                     idtest = steam_handle.testid(newsteamid)
-                    if not errorcheck(idtest):
-                        errorhandle()
+                    if errorcheck(idtest, True):
                         quit()
                     if not idtest:
                         print("Invalid Steam id")
@@ -426,8 +435,6 @@ def filechecks():
                 dbcheck = False
                 continue
                 
-
-                        
 
 
 setupdataspacing()
@@ -465,6 +472,4 @@ while run:
             continue
         else:
             print("Invalid choice")
-
-
 

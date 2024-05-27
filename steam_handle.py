@@ -1,6 +1,6 @@
+'''Function library to interface with steam'''
 import requests
 import json, os
-import make_db
 with open("data.json") as f:
     data = json.load(f)
 
@@ -19,6 +19,11 @@ days = {"1": "01", "2": "02", "3": "03", "4": "04", "5": "05", "6": "06", "7": "
 
 
 def gethours(game_ids):
+    global data, STEAM_ID, API_KEY
+    with open("data.json") as f:
+        data = json.load(f)
+    STEAM_ID = data["steam_id"]
+    API_KEY = data["api_key"]
     '''Takes the list argument of tuples [(id, game_id), ...]
        and returns a list of tuples [(id, hours), ...]'''
     
@@ -27,11 +32,14 @@ def gethours(game_ids):
     url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={STEAM_ID}&format=json'
     try:
         response = requests.get(url)
-    except Exception as e:
-        return 1
+    except:
+        return 10
 
     if response.status_code == 200:
-        data = response.json()
+        try:
+            data = response.json()
+        except:
+            return 11
         
         if 'response' in data and 'games' in data['response']:
                 finallist = []
@@ -41,11 +49,16 @@ def gethours(game_ids):
                             finallist.append((entry[0], round((game['playtime_forever'] / 60), 1)))
                 return finallist
     else:
-        return False
+        return 12
 
 
 
 def get_game_details(appid, language='english'):
+    global data, STEAM_ID, API_KEY
+    with open("data.json") as f:
+        data = json.load(f)
+    STEAM_ID = data["steam_id"]
+    API_KEY = data["api_key"]
     '''Returns the release date in two forms and the developer of the given appid'''
     url = f'https://store.steampowered.com/api/appdetails'
     params = {
@@ -56,9 +69,11 @@ def get_game_details(appid, language='english'):
     try:
         response = requests.get(url, params=params)
     except:
-        return 1
-    
-    data = response.json()
+        return 10
+    try:
+        data = response.json()
+    except:
+        return 11
     if str(appid) in data and data[str(appid)]['success']:
         details = data[str(appid)]['data']
         release_date = details.get('release_date', {}).get('date')
@@ -86,7 +101,11 @@ def convertdate(date):
 
 def getbasicdata():
     '''Gets the appid, name and hours of the user's steam library'''
-    global API_KEY, STEAM_ID
+    global data, STEAM_ID, API_KEY
+    with open("data.json") as f:
+        data = json.load(f)
+    STEAM_ID = data["steam_id"]
+    API_KEY = data["api_key"]
     url = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/'
 
     params = {
@@ -99,8 +118,11 @@ def getbasicdata():
     try:
         response = requests.get(url, params=params)
     except:
-        return 1
-    data = response.json()
+        return 10
+    try:
+        data = response.json()
+    except:
+        return 11
 
     if 'response' in data and 'games' in data['response']:
         games = data['response']['games']
@@ -135,14 +157,34 @@ def compiledata():
         return None
 
 def testid(id):
+    global STEAM_ID, data, API_KEY
+    with open("data.json") as f:
+        data = json.load(f)
+    STEAM_ID = data["steam_id"]
+    API_KEY = data["api_key"]
     '''Tests if the argument is a valid steam id'''
     url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={id}&format=json'
     try:
         response = requests.get(url)
     except:
-        return 1
+        return 10
     if response.status_code == 200:
         return True
     else:
         return False
+
+
+def testconnection():
+    global STEAM_ID, data, API_KEY
+    with open("data.json") as f:
+        data = json.load(f)
+    STEAM_ID = data["steam_id"]
+    API_KEY = data["api_key"]
+    url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={STEAM_ID}&format=json"
+    try:
+        response = requests.get(url)
+    except ConnectionError:
+        return False
+    else:
+        return True
 
