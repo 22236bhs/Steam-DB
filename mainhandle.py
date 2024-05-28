@@ -7,14 +7,15 @@ os.chdir("C:/Users/ojkit/Documents/Steam DB")
 #Constants
 DATABASE = "db_test.db"
 TESTDB = "db_test.db"
+JSONFILE = "data.json"
 EXITNUM = 6
 DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_release_date"}
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""}
 DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio", "steam_release_date": "Release date"}
 
-dataspacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_date": 15}
+dataspacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_date": 17}
 
-with open("data.json") as js:
+with open(JSONFILE) as js:
     datajson = json.load(js)
 
 def exequery(execute):
@@ -31,19 +32,20 @@ def errorcheck(i, prnt):
     errordict = {10: {"code": "No internet connection detected"},
                  11: {"code": "Error regarding WiFi network"},
                  12: {"code": "Error regarding network response"}}
-    if i in errordict:
-        if prnt:
-            print(errordict[i]["code"])
-        return True
+    if isinstance(i, int):
+        if i in errordict:
+            if prnt:
+                print(errordict[i]["code"])
+            return True
+        else:
+            return False
     else:
         return False
 
 
 
 
-def errorhandle():
-    '''Prints out an error statement'''
-    print("Connection errors detected...")
+
 
 
 def setupdataspacing():
@@ -63,6 +65,12 @@ def setupdataspacing():
                 maxstudiolength = len(result[1])
             if len(str(result[2])) > maxhourlength:
                 maxhourlength = len(str(result[2]))
+        if len("Name") > maxnamelength:
+            maxnamelength = len("Name")
+        if len("Hours") > maxhourlength:
+            maxhourlength = len("Hours")
+        if len("Studio") > maxstudiolength:
+            maxstudiolength = len("Studio")
         maxnamelength += 5
         maxstudiolength += 5
         maxhourlength += 5
@@ -171,13 +179,13 @@ def searchdata():
 
             setuptosearch = True
             while setuptosearch:
-                print("\nType what to search")
+                print("\nEnter what to search")
                 
                 if date:
                     print("Enter the date in the format (DD/MM/YYYY) ")
-                print("Type \"back\" to go back")
+                print("Type |back| to go back")
                 tosearch = input("> ")
-                if tosearch == "back":
+                if tosearch == "|back|":
                     setuptosearch = False
                     continue
                 
@@ -206,12 +214,26 @@ def searchdata():
     JOIN studios ON studios.id = steam_library.studio_id                       
     {search}
     {order}''')
+                finalprint = (" " * 5)
+                finalprint += (spacingcalc("Name", "name"))
+                finalprint += (spacingcalc("Hours", "hours"))
+                finalprint += (spacingcalc("Studio", "studios.studio_name"))
+                finalprint += (spacingcalc("Release date", "steam_release_date"))
+                finalprint += "\n"
                 print("Results:\n")
-                print(f"{spacingcalc("Name", "name")}{spacingcalc("Hours", "hours")}", end='')
-                print(f"{spacingcalc("Studio", "studios.studio_name")}{spacingcalc("Release date", "steam_release_date")}\n")
+                print(finalprint)
+                finalprint = (" " * 5)
+                
                 for result in results:
-                    print(f"{spacingcalc(result[0], "name")}{spacingcalc(str(result[1]), "hours")}", end='')
-                    print(f"{spacingcalc(result[2], "studios.studio_name")}{spacingcalc(result[3], "steam_release_date")}")
+                    finalprint = (" " * 5)
+                    finalprint += (spacingcalc(result[0], "name"))
+                    finalprint += (spacingcalc(str(result[1]), "hours"))
+                    finalprint += (spacingcalc(result[2], "studios.studio_name"))
+                    finalprint += (spacingcalc(result[3], "steam_release_date"))
+                    print("-" * (len(finalprint)))
+                    print(finalprint)
+                if len(finalprint) != 5:
+                    print("-" * (len(finalprint)))
                 setuptosearch = False
                 selectuserinp = False
             
@@ -230,6 +252,7 @@ def gettotalhours():
 
 
 def isint(i):
+    '''Returns True if the argument can be an integer, else return False'''
     try:
         i = int(i)
     except:
@@ -268,7 +291,7 @@ def settings():
                 if idtest:
                     print("Steam id updated")
                     datajson["steam_id"] = str(steamid)
-                    with open("data.json", 'w') as js:
+                    with open(JSONFILE, 'w') as js:
                         json.dump(datajson, js)
                     return 0
 
@@ -294,7 +317,7 @@ Note: (Only games with more than 1 hour played will be added to the new database
                         return 0
                     setupdataspacing()
                 else:
-                    errorhandle()
+                    print("Connection errors")
 
             else:
                 print("Invalid input")
@@ -313,6 +336,7 @@ Note: (Only games with more than 1 hour played will be added to the new database
 
 def handleprint():
     '''Handles printing out data based on user inputs'''
+    global dataspacing
     getwhatdata = True
     while getwhatdata:
         print("\nWhat data to print?\n(Type the corresponding numbers seperated by a space)\n")
@@ -374,22 +398,24 @@ def handleprint():
                     results = exequery(sqlrun)
                     tup = results[0]
                     size = len(tup)
-                    finalprint = ""
+                    finalprint = (" " * 5)
                     for i in range(size):
                         finalprint += spacingcalc(DATADISPLAY[userinp[i]], userinp[i])
                     print(f"{finalprint}\n")
                     for a in range((len(results))):
-                        finalprint = ""
+                        finalprint = (" " * 5)
                         for i in range(size):
                             finalprint += spacingcalc(str(results[a][i]), userinp[i])
+                        print("-" * (len(finalprint)))    
                         print(finalprint)
                         getdataorder = False
                         getwhatdata = False
+                    if len(finalprint) != 5:
+                        print("-" * (len(finalprint)))
                         
 
 
-def filechecks():
-
+def filechecks(): 
     dbcheck = True    
     while dbcheck:
         try:
@@ -406,10 +432,10 @@ def filechecks():
                 print("Invalid input")
                 continue
             try:
-                with open("data.json") as test:
+                with open(JSONFILE) as test:
                     pass
             except:
-                test = open("data.json", "w")
+                test = open(JSONFILE, "w")
                 json.dump({"steam_id": "", "api_key": ""}, test)
                 test.close()
                 while True:
@@ -431,7 +457,7 @@ def filechecks():
                     break
                 newapikey = input("Enter your api_key (Type 'quit' to quit)").lower()
         else:
-            with open("data.json") as test:
+            with open(JSONFILE) as test:
                 dbcheck = False
                 continue
                 

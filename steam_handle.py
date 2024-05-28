@@ -1,10 +1,11 @@
 '''Function library to interface with steam'''
 import requests
 import json, os
+os.chdir("C:/Users/ojkit/Documents/Steam DB")
 with open("data.json") as f:
     data = json.load(f)
 
-os.chdir("C:/Users/ojkit/Documents/Steam DB")
+
 
 # Note: data.json is a hidden json file containing the steam id and api key
 # Format:  {"steam_id": "id", "api_key": "key"}
@@ -54,12 +55,12 @@ def gethours(game_ids):
 
 
 def get_game_details(appid, language='english'):
+    '''Returns the release date in two forms and the developer of the given appid'''
     global data, STEAM_ID, API_KEY
     with open("data.json") as f:
         data = json.load(f)
     STEAM_ID = data["steam_id"]
     API_KEY = data["api_key"]
-    '''Returns the release date in two forms and the developer of the given appid'''
     url = f'https://store.steampowered.com/api/appdetails'
     params = {
         'appids': appid,
@@ -121,6 +122,7 @@ def getbasicdata():
         return 10
     try:
         data = response.json()
+        print(data)
     except:
         return 11
 
@@ -187,4 +189,3 @@ def testconnection():
         return False
     else:
         return True
-
