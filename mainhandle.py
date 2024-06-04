@@ -1,5 +1,6 @@
 '''File for input/output operations'''
 import sqlite3, json, os
+
 import steam_handle, make_db
 
 os.chdir("C:/Users/ojkit/Documents/Steam DB")
@@ -71,11 +72,12 @@ def setupdataspacing():
             maxhourlength = len("Hours")
         if len("Studio") > maxstudiolength:
             maxstudiolength = len("Studio")
-        maxnamelength += 5
-        maxstudiolength += 5
-        maxhourlength += 5
+        
     except:
         pass
+    maxnamelength += 5
+    maxstudiolength += 5
+    maxhourlength += 5
     dataspacing["name"] = maxnamelength
     dataspacing["studios.studio_name"] = maxstudiolength
     dataspacing["hours"] = maxhourlength
@@ -111,11 +113,10 @@ def updatedatabasehours():
     newresults = steam_handle.gethours(results)
     if errorcheck(newresults, True):
         return 0
-    with sqlite3.connect("steam_db.db") as f:
-        cursor = f.cursor()
-        for tup in newresults:
-            cursor.execute(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
-        setupdataspacing()
+    
+    for tup in newresults:
+        exequery(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
+    setupdataspacing()
 
 
 def searchdata():
@@ -183,17 +184,14 @@ def searchdata():
                 
                 if date:
                     print("Enter the date in the format (DD/MM/YYYY) ")
-                print("Type |back| to go back")
+                print("Type \\back to go back")
                 tosearch = input("> ")
-                if tosearch == "|back|":
+                if tosearch == "\\back":
                     setuptosearch = False
                     continue
                 
                 elif integer:
-                    if isint(tosearch):
-                        pass
-                    else:
-                     
+                    if not isint(tosearch):
                         print("Invalid input, must be integer")
                         continue
 
@@ -240,14 +238,11 @@ def searchdata():
 
             
 def gettotalhours():
-    '''Returns the total hours of the database entries through STEAM (not through the db file)'''
-    results = exequery("SELECT id, game_id FROM steam_library;")
-    results2 = steam_handle.gethours(results)
-    if errorcheck(results2, True):
-        return 0
+    '''Returns the total hours of the database entries through the database (not through steam)'''
+    results = exequery("SELECT hours FROM steam_library;")
     total = 0
-    for entry in results2:
-        total += entry[1]
+    for num in results:
+        total += num[0]
     print(f"Total hours: {round(total, 1)} hours")
 
 
@@ -465,7 +460,7 @@ def filechecks():
 
 setupdataspacing()
 
-            
+
 run = True
 while run:
     print(f'''\nMake your choice:
