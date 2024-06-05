@@ -6,8 +6,7 @@ import steam_handle, make_db, error_handle
 os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
 #Constants
-DATABASE = "db_test.db"
-TESTDB = "db_test.db"
+DATABASE = "steam_db.db"
 JSONFILE = "data.json"
 DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_release_date"}
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""}
@@ -165,14 +164,14 @@ def SearchData():
                 
                 if date:
                     print("Enter the date in the format (DD/MM/YYYY) ")
-                print("Type \\back to go back")
+                print("Type \"/back\" to go back")
                 tosearch = input("> ")
-                if tosearch == "\\back":
+                if tosearch == "/back":
                     setuptosearch = False
                     continue
                 
                 elif integer:
-                    if not isInt(tosearch):
+                    if not IsInt(tosearch):
                         print("Invalid input, must be integer")
                         continue
 
@@ -227,7 +226,7 @@ def GetTotalHours():
     print(f"Total hours: {round(total, 1)} hours")
 
 
-def isInt(i):
+def IsInt(i):
     '''Returns True if the argument can be an integer, else return False'''
     try:
         i = int(i)
@@ -242,74 +241,85 @@ def Settings():
     '''Settings section of the interface'''
     global datajson
     BACKNUM = 3
-    print(f'''\n1. Change steam id
+    MainSelect = True
+    while MainSelect:
+        print(f'''\n1. Change steam id
 2. Remake steam database
 {BACKNUM}. Back''')
-    userinp = input("> ")
-    try:
-        userinp = int(userinp)
-    except:
-        print("Invalid input")
-        return 0
-    else:
-        if userinp == 1:
-            print("\nEnter your steam id")
-            steamid = input("> ")
-            try:
-                steamid = int(steamid)
-            except:
-                print("Invalid input")
-                return 0
-            else:
-                idtest = steam_handle.TestId(str(steamid))
-                
-                if not idtest:
-                    print("Invalid Steam id")
-                    return 0
-                if error_handle.ErrorCheck(idtest):
-                    return 0
-                if idtest:
-                    print("Steam id updated")
-                    datajson["steam_id"] = str(steamid)
-                    with open(JSONFILE, 'w') as js:
-                        json.dump(datajson, js)
-                    return 0
-
-                else:
-                    print("Invalid Steam id")
-                    return 0
-
-                
-        elif userinp == 2:
-            print('''\nAre you sure you want to redo the database?
-THe old data will be DELETED and replaced with new data.
-Note: (Only games with more than 1 hour played will be added to the new database)\n''')
-            proceed = input("Proceed? (Y/N)\n> ").lower()
-            if proceed == "n":
-                return 0
-            elif proceed == "y":
-                if steam_handle.TestConnection():
-                    with sqlite3.connect(TESTDB) as test:
-                        pass
-                    check = make_db.MakeDb(TESTDB)
-                    if error_handle.ErrorCheck(check):
-                        return 0
-                    SetupDataSpacing()
-                else:
-                    print("Connection errors")
-
-            else:
-                print("Invalid input")
-
-
-
-                        
-
-        elif userinp == BACKNUM:
-            return 0
+        userinp = input("> ")
+        try:
+            userinp = int(userinp)
+        except:
+            print("Invalid input")
+            continue
         else:
-            print("Invalid option")
-            return 0
+            if userinp == 1:
+                GetId = True
+                while GetId:
+                    print("\nEnter your steam id\nType \"/back\" to go back")
+                    steamid = input("> ")
+                    if steamid == "/back":
+                        GetId = False
+                        continue
+                    try:
+                        steamid = int(steamid)
+                    except:
+                        print("Invalid input")
+                        continue
+                    else:
+                        idtest = steam_handle.TestId(str(steamid))
+                        
+                        if not idtest:
+                            print("Invalid Steam id")
+                            continue
+                        if error_handle.ErrorCheck(idtest):
+                            continue
+                        if idtest:
+                            print("Steam id updated")
+                            datajson["steam_id"] = str(steamid)
+                            with open(JSONFILE, 'w') as js:
+                                json.dump(datajson, js)
+                            GetId = False
+                            continue
+
+                        else:
+                            print("Invalid Steam id")
+                            continue
+
+                    
+            elif userinp == 2:
+                RedoDatabase = True
+                while RedoDatabase:
+                    print('''\nAre you sure you want to redo the database?
+The old data will be DELETED and replaced with new data.
+Note: (Some games that are unfit for formatting in the database,
+as well as games with under 1 hour, won't be added to the database)\n''')
+                    proceed = input("Proceed? (Y/N)\n> ").lower()
+                    if proceed == "n":
+                        RedoDatabase = False
+                        continue
+                    elif proceed == "y":
+                        if steam_handle.TestConnection():
+                            with sqlite3.connect(DATABASE) as test:
+                                pass
+                            check = make_db.MakeDb(DATABASE)
+                            if error_handle.ErrorCheck(check):
+                                RedoDatabase = False
+                                continue
+                            SetupDataSpacing()
+                            RedoDatabase = False
+                            continue
+                        else:
+                            print("Connection errors")
+
+                    else:
+                        print("Invalid input")
+
+            elif userinp == BACKNUM:
+                return 0
+            else:
+                print("Invalid option")
+                continue
 
 
 
@@ -361,7 +371,7 @@ def HandlePrint():
                 if sort == "5":
                     getdataorder = False
                     continue
-                if isInt(sort):
+                if IsInt(sort):
                     sort = int(sort)
                 else:
                     print("Invalid input, try again")
@@ -467,6 +477,7 @@ while run:
         elif inp == 3:
             print("Updating...")
             UpdateDatabaseHours()
+            print("Database hours updated")
         elif inp == 4:
             print("Fetching data...")
             GetTotalHours()
@@ -477,4 +488,3 @@ while run:
             continue
         else:
             print("Invalid choice")
-

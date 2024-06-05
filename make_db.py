@@ -3,8 +3,6 @@ import steam_handle, sqlite3, os
 
 os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
-dbname = "db_test.db"
-
 def ErrorCheck(i):
     '''Checks the argument for the error code'''
     if i == 1:
@@ -30,6 +28,7 @@ def MakeDb(database):
     if not ErrorCheck(steam_handle.GetHours([])):
             return 1
     with sqlite3.connect(database) as db:
+        print("Compiling steam library data...")
         gamedata = steam_handle.CompileData()
         if isinstance(gamedata, int):
             return gamedata
@@ -48,7 +47,7 @@ def MakeDb(database):
     lower_name TEXT,
     FOREIGN KEY (studio_id) REFERENCES studios(id)
     )''')
-        print("Compiling steam data...")
+        
         
         
         gamedata = Cleanse(gamedata)

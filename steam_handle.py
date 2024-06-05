@@ -188,7 +188,7 @@ def TestConnection():
     url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={steam_id}&format=json"
     try:
         response = requests.get(url)
-    except ConnectionError:
+    except:
         return False
     else:
         return True
@@ -204,4 +204,4 @@ def UpdateId():
 
 
 if __name__ == "__main__":
-    TestId(4)
+    print(TestId(1))
