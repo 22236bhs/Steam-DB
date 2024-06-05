@@ -1,7 +1,7 @@
 '''File for input/output operations'''
 import sqlite3, json, os
 
-import steam_handle, make_db
+import steam_handle, make_db, error_handle
 
 os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
@@ -9,7 +9,6 @@ os.chdir("C:/Users/ojkit/Documents/Steam DB")
 DATABASE = "db_test.db"
 TESTDB = "db_test.db"
 JSONFILE = "data.json"
-EXITNUM = 6
 DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_release_date"}
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""}
 DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio", "steam_release_date": "Release date"}
@@ -19,7 +18,7 @@ dataspacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_d
 with open(JSONFILE) as js:
     datajson = json.load(js)
 
-def exequery(execute):
+def ExeQuery(execute):
     '''Executes given query in the database'''
     with sqlite3.connect(DATABASE) as f:
         cursor = f.cursor()
@@ -28,28 +27,10 @@ def exequery(execute):
         return results
 
 
-def errorcheck(i, prnt):
-    '''Checks the argument for the error code'''
-    errordict = {10: {"code": "No internet connection detected"},
-                 11: {"code": "Error regarding WiFi network"},
-                 12: {"code": "Error regarding network response"}}
-    if isinstance(i, int):
-        if i in errordict:
-            if prnt:
-                print(errordict[i]["code"])
-            return True
-        else:
-            return False
-    else:
-        return False
 
 
 
-
-
-
-
-def setupdataspacing():
+def SetupDataSpacing():
     '''Setup the spacing of printing of the studio name and game name'''
     global dataspacing
     maxnamelength = 0
@@ -58,7 +39,7 @@ def setupdataspacing():
     try:
         with open(DATABASE) as test:
             pass
-        results = exequery("SELECT name, studios.studio_name, hours FROM steam_library JOIN studios ON steam_library.studio_id = studios.id;")
+        results = ExeQuery("SELECT name, studios.studio_name, hours FROM steam_library JOIN studios ON steam_library.studio_id = studios.id;")
         for result in results:
             if len(result[0]) > maxnamelength:
                 maxnamelength = len(result[0])
@@ -84,14 +65,14 @@ def setupdataspacing():
 
 
 
-def convertdate(date):
+def ConvertDate(date):
     '''Recieves the arguments DD/MM/YYYY and returns YYYYMMDD'''
     date = date.split("/")
     date = date[2] + date[1] + date[0]
     return date
 
 
-def spacingcalc(string, key):
+def SpacingCalc(string, key):
     '''Uses the given key to determine how much space should be left after the string and returns it'''
     if key not in dataspacing:
         return False
@@ -106,20 +87,20 @@ def spacingcalc(string, key):
         
 
 
-def updatedatabasehours():
+def UpdateDatabaseHours():
     '''Updates the database with the user's current Steam hours'''
     execute = "SELECT id, game_id FROM steam_library;"
-    results = exequery(execute)
-    newresults = steam_handle.gethours(results)
-    if errorcheck(newresults, True):
+    results = ExeQuery(execute)
+    newresults = steam_handle.GetHours(results)
+    if error_handle.ErrorCheck(newresults):
         return 0
     
     for tup in newresults:
-        exequery(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
-    setupdataspacing()
+        ExeQuery(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
+    SetupDataSpacing()
 
 
-def searchdata():
+def SearchData():
     '''Searches the database for custom matches'''
     keydict = {1: {"search": "WHERE steam_library.lower_name LIKE \"%",
                     "join": "%\"",
@@ -191,13 +172,13 @@ def searchdata():
                     continue
                 
                 elif integer:
-                    if not isint(tosearch):
+                    if not isInt(tosearch):
                         print("Invalid input, must be integer")
                         continue
 
                 elif date:
                     try:
-                        tosearch = convertdate(tosearch)
+                        tosearch = ConvertDate(tosearch)
                     except:
                         print("Invalid input")
                         continue
@@ -207,16 +188,16 @@ def searchdata():
 
                 search += tosearch
                 search += join
-                results = exequery(f'''SELECT steam_library.name, steam_library.hours, studios.studio_name, steam_library.steam_release_date
+                results = ExeQuery(f'''SELECT steam_library.name, steam_library.hours, studios.studio_name, steam_library.steam_release_date
     FROM steam_library
     JOIN studios ON studios.id = steam_library.studio_id                       
     {search}
     {order}''')
                 finalprint = (" " * 5)
-                finalprint += (spacingcalc("Name", "name"))
-                finalprint += (spacingcalc("Hours", "hours"))
-                finalprint += (spacingcalc("Studio", "studios.studio_name"))
-                finalprint += (spacingcalc("Release date", "steam_release_date"))
+                finalprint += (SpacingCalc("Name", "name"))
+                finalprint += (SpacingCalc("Hours", "hours"))
+                finalprint += (SpacingCalc("Studio", "studios.studio_name"))
+                finalprint += (SpacingCalc("Release date", "steam_release_date"))
                 finalprint += "\n"
                 print("Results:\n")
                 print(finalprint)
@@ -224,10 +205,10 @@ def searchdata():
                 
                 for result in results:
                     finalprint = (" " * 5)
-                    finalprint += (spacingcalc(result[0], "name"))
-                    finalprint += (spacingcalc(str(result[1]), "hours"))
-                    finalprint += (spacingcalc(result[2], "studios.studio_name"))
-                    finalprint += (spacingcalc(result[3], "steam_release_date"))
+                    finalprint += (SpacingCalc(result[0], "name"))
+                    finalprint += (SpacingCalc(str(result[1]), "hours"))
+                    finalprint += (SpacingCalc(result[2], "studios.studio_name"))
+                    finalprint += (SpacingCalc(result[3], "steam_release_date"))
                     print("-" * (len(finalprint)))
                     print(finalprint)
                 if len(finalprint) != 5:
@@ -237,16 +218,16 @@ def searchdata():
             
 
             
-def gettotalhours():
+def GetTotalHours():
     '''Returns the total hours of the database entries through the database (not through steam)'''
-    results = exequery("SELECT hours FROM steam_library;")
+    results = ExeQuery("SELECT hours FROM steam_library;")
     total = 0
     for num in results:
         total += num[0]
     print(f"Total hours: {round(total, 1)} hours")
 
 
-def isint(i):
+def isInt(i):
     '''Returns True if the argument can be an integer, else return False'''
     try:
         i = int(i)
@@ -257,7 +238,7 @@ def isint(i):
     
 
 
-def settings():
+def Settings():
     '''Settings section of the interface'''
     global datajson
     BACKNUM = 3
@@ -280,8 +261,12 @@ def settings():
                 print("Invalid input")
                 return 0
             else:
-                idtest = steam_handle.testid(str(steamid))
-                if errorcheck(idtest, True):
+                idtest = steam_handle.TestId(str(steamid))
+                
+                if not idtest:
+                    print("Invalid Steam id")
+                    return 0
+                if error_handle.ErrorCheck(idtest):
                     return 0
                 if idtest:
                     print("Steam id updated")
@@ -303,14 +288,13 @@ Note: (Only games with more than 1 hour played will be added to the new database
             if proceed == "n":
                 return 0
             elif proceed == "y":
-                if steam_handle.testconnection():
-                    make_db.deletetables(TESTDB)
+                if steam_handle.TestConnection():
                     with sqlite3.connect(TESTDB) as test:
                         pass
-                    check = make_db.makedb(TESTDB)
-                    if errorcheck(check, True):
+                    check = make_db.MakeDb(TESTDB)
+                    if error_handle.ErrorCheck(check):
                         return 0
-                    setupdataspacing()
+                    SetupDataSpacing()
                 else:
                     print("Connection errors")
 
@@ -329,7 +313,7 @@ Note: (Only games with more than 1 hour played will be added to the new database
 
 
 
-def handleprint():
+def HandlePrint():
     '''Handles printing out data based on user inputs'''
     global dataspacing
     getwhatdata = True
@@ -377,7 +361,7 @@ def handleprint():
                 if sort == "5":
                     getdataorder = False
                     continue
-                if isint(sort):
+                if isInt(sort):
                     sort = int(sort)
                 else:
                     print("Invalid input, try again")
@@ -390,17 +374,17 @@ def handleprint():
                     if DATAKEYSORT[sort]:
                         sqlrun += f" ORDER BY {DATAKEYSORT[sort]}"
                     sqlrun += ";"
-                    results = exequery(sqlrun)
+                    results = ExeQuery(sqlrun)
                     tup = results[0]
                     size = len(tup)
                     finalprint = (" " * 5)
                     for i in range(size):
-                        finalprint += spacingcalc(DATADISPLAY[userinp[i]], userinp[i])
+                        finalprint += SpacingCalc(DATADISPLAY[userinp[i]], userinp[i])
                     print(f"{finalprint}\n")
                     for a in range((len(results))):
                         finalprint = (" " * 5)
                         for i in range(size):
-                            finalprint += spacingcalc(str(results[a][i]), userinp[i])
+                            finalprint += SpacingCalc(str(results[a][i]), userinp[i])
                         print("-" * (len(finalprint)))    
                         print(finalprint)
                         getdataorder = False
@@ -410,7 +394,7 @@ def handleprint():
                         
 
 
-def filechecks(): 
+def FileChecks(): 
     dbcheck = True    
     while dbcheck:
         try:
@@ -443,8 +427,8 @@ def filechecks():
                     except:
                         print("Invalid input")
                         continue
-                    idtest = steam_handle.testid(newsteamid)
-                    if errorcheck(idtest, True):
+                    idtest = steam_handle.TestId(newsteamid)
+                    if error_handle.ErrorCheck(idtest):
                         quit()
                     if not idtest:
                         print("Invalid Steam id")
@@ -458,16 +442,16 @@ def filechecks():
                 
 
 
-setupdataspacing()
+SetupDataSpacing()
 
-
+EXITNUM = 6
 run = True
 while run:
     print(f'''\nMake your choice:
 1. Print data
 2. Search data
 3. Update database hours
-4. Get total hours
+4. Get total database hours
 5. Settings
 {EXITNUM}. Exit''')
     try:
@@ -476,18 +460,18 @@ while run:
         print("Invalid input")
     else:
         if inp == 1:
-            handleprint()
+            HandlePrint()
             print()
         elif inp == 2:
-            searchdata()
+            SearchData()
         elif inp == 3:
             print("Updating...")
-            updatedatabasehours()
+            UpdateDatabaseHours()
         elif inp == 4:
             print("Fetching data...")
-            gettotalhours()
+            GetTotalHours()
         elif inp == 5:
-            settings()
+            Settings()
         elif inp == EXITNUM:
             run = False
             continue

@@ -5,14 +5,14 @@ os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
 dbname = "db_test.db"
 
-def errorcheck(i):
+def ErrorCheck(i):
     '''Checks the argument for the error code'''
     if i == 1:
         return False
     else:
         return True
 
-def cleanse(list):
+def Cleanse(list):
     '''Cleanses the names in the list of any strange characters like a trademark'''
     validchar = "qwertyuiopasdfghjklzxcvbnm1234567890!@#$%^&*()`~[]}{|;\':\"\\,./<>? "
     for game in list:
@@ -24,13 +24,17 @@ def cleanse(list):
         game['name'] = newname
     return list
 
-def makedb(makedb):
+def MakeDb(database):
     '''Makes a databse, if it doesn't exist, of the user's steam library'''
     
-    if not errorcheck(steam_handle.gethours([])):
+    if not ErrorCheck(steam_handle.GetHours([])):
             return 1
-    with sqlite3.connect(makedb) as db:
+    with sqlite3.connect(database) as db:
+        gamedata = steam_handle.CompileData()
+        if isinstance(gamedata, int):
+            return gamedata
         print("Creating database...")
+        DeleteTables(database)
         cursor = db.cursor()
         cursor.execute('CREATE TABLE IF NOT EXISTS studios (id INTEGER PRIMARY KEY, studio_name TEXT, studio_name_lower TEXT)')
         cursor.execute('''CREATE TABLE IF NOT EXISTS steam_library (
@@ -45,8 +49,9 @@ def makedb(makedb):
     FOREIGN KEY (studio_id) REFERENCES studios(id)
     )''')
         print("Compiling steam data...")
-        gamedata = steam_handle.compiledata()
-        gamedata = cleanse(gamedata)
+        
+        
+        gamedata = Cleanse(gamedata)
         print("Sorting data...")
         for data in gamedata:
             cursor.execute('''INSERT INTO steam_library (name,  hours, steam_release_date, date_order, game_id, lower_name)
@@ -68,7 +73,7 @@ def makedb(makedb):
             cursor.execute(f"UPDATE steam_library SET studio_id = {devsdict[data["developer"]]} WHERE game_id = {data["appid"]}")
         print("Database finished.")
 
-def deletetables(database):
+def DeleteTables(database):
     try:
         with open(database) as f:
             pass
