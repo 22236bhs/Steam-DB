@@ -395,53 +395,6 @@ def HandlePrint():
                     getwhatdata = False
                     
                         
-
-
-def FileChecks(): 
-    dbcheck = True    
-    while dbcheck:
-        try:
-            with open(DATABASE) as test:
-                pass
-        except:
-            print("No database found.\nCreate a database?\n(Y/N)\n")
-            proceed = input("> ").lower()
-            if proceed == "y":
-                pass
-            elif proceed == "n":
-                quit()
-            else:
-                print("Invalid input")
-                continue
-            try:
-                with open(JSONFILE) as test:
-                    pass
-            except:
-                test = open(JSONFILE, "w")
-                json.dump({"steam_id": "", "api_key": ""}, test)
-                test.close()
-                while True:
-                    newsteamid = input("Enter your steam id (Type 'quit' to quit)").lower()
-                    if newsteamid == "quit":
-                        quit()
-                    try:
-                        newsteamid = int(newsteamid)
-                        newsteamid = str(newsteamid)
-                    except:
-                        print("Invalid input")
-                        continue
-                    idtest = steam_handle.TestId(newsteamid)
-                    if error_handle.ErrorCheck(idtest):
-                        quit()
-                    if not idtest:
-                        print("Invalid Steam id")
-                        continue
-                    break
-                newapikey = input("Enter your api_key (Type 'quit' to quit)").lower()
-        else:
-            with open(JSONFILE) as test:
-                dbcheck = False
-                continue
                 
 
 
