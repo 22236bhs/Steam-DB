@@ -17,6 +17,28 @@ dataspacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_d
 with open(JSONFILE) as js:
     datajson = json.load(js)
 
+def PrintOutData(data, format):
+    '''Prints out each tuple in data according to the format. The size of the tuples and the format must be the same'''
+    TotalSpace = 5
+    sep = TotalSpace
+    for i in range(len(format)): 
+        TotalSpace += dataspacing[format[i]]
+    FinalPrint = " " * sep
+    for i in range(len(format)):
+        FinalPrint += SpacingCalc(DATADISPLAY[format[i]], format[i])
+    print(FinalPrint)
+    
+    print("-" * TotalSpace)
+    if len(data) > 0:
+        for a in range(len(data)):
+            FinalPrint = " " * sep
+            for i in range(len(data[a])):
+                FinalPrint += SpacingCalc(str(data[a][i]), format[i])
+            print(FinalPrint)
+            print("-" * TotalSpace)
+
+
+
 def ExeQuery(execute):
     '''Executes given query in the database'''
     with sqlite3.connect(DATABASE) as f:
@@ -192,26 +214,9 @@ def SearchData():
     JOIN studios ON studios.id = steam_library.studio_id                       
     {search}
     {order}''')
-                finalprint = (" " * 5)
-                finalprint += (SpacingCalc("Name", "name"))
-                finalprint += (SpacingCalc("Hours", "hours"))
-                finalprint += (SpacingCalc("Studio", "studios.studio_name"))
-                finalprint += (SpacingCalc("Release date", "steam_release_date"))
-                finalprint += "\n"
-                print("Results:\n")
-                print(finalprint)
-                finalprint = (" " * 5)
                 
-                for result in results:
-                    finalprint = (" " * 5)
-                    finalprint += (SpacingCalc(result[0], "name"))
-                    finalprint += (SpacingCalc(str(result[1]), "hours"))
-                    finalprint += (SpacingCalc(result[2], "studios.studio_name"))
-                    finalprint += (SpacingCalc(result[3], "steam_release_date"))
-                    print("-" * (len(finalprint)))
-                    print(finalprint)
-                if len(finalprint) != 5:
-                    print("-" * (len(finalprint)))
+                print("Results:\n")
+                PrintOutData(results, ["name", "hours", "studios.studio_name", "steam_release_date"])
                 setuptosearch = False
                 selectuserinp = False
             
@@ -385,22 +390,10 @@ def HandlePrint():
                         sqlrun += f" ORDER BY {DATAKEYSORT[sort]}"
                     sqlrun += ";"
                     results = ExeQuery(sqlrun)
-                    tup = results[0]
-                    size = len(tup)
-                    finalprint = (" " * 5)
-                    for i in range(size):
-                        finalprint += SpacingCalc(DATADISPLAY[userinp[i]], userinp[i])
-                    print(f"{finalprint}\n")
-                    for a in range((len(results))):
-                        finalprint = (" " * 5)
-                        for i in range(size):
-                            finalprint += SpacingCalc(str(results[a][i]), userinp[i])
-                        print("-" * (len(finalprint)))    
-                        print(finalprint)
-                        getdataorder = False
-                        getwhatdata = False
-                    if len(finalprint) != 5:
-                        print("-" * (len(finalprint)))
+                    PrintOutData(results, userinp)
+                    getdataorder = False
+                    getwhatdata = False
+                    
                         
 
 
@@ -454,6 +447,8 @@ def FileChecks():
 
 SetupDataSpacing()
 
+       
+
 EXITNUM = 6
 run = True
 while run:
@@ -488,3 +483,5 @@ while run:
             continue
         else:
             print("Invalid choice")
+
+
