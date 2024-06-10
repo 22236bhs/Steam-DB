@@ -253,6 +253,3 @@ def UpdateId():
         data = json.load(f)
     steam_id = data["steam_id"]
 
-
-if __name__ == "__main__":
-    print(ConvertDate("Jun 01, 2020"))

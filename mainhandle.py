@@ -446,47 +446,50 @@ def HandlePrint():
                     #End the function
                     return 0
                     
-                        
+                    
+def MainLoop():
+    '''Main input handling'''
+    EXITNUM = 6
+    run = True
+    while run: #Main loop
+        print(f'''\nMake your choice:
+    1. Print data
+    2. Search data
+    3. Update database hours
+    4. Get total database hours
+    5. Settings
+    {EXITNUM}. Exit''')
+        #Attempt to make the input an integer, reprompt otherwise
+        try:
+            inp = int(input("> "))
+        except:
+            print("Invalid input")
+        else:
+            if inp == 1:
+                HandlePrint()
+                print()
+            elif inp == 2:
+                SearchData()
+            elif inp == 3:
+                print("Updating...")
+                UpdateDatabaseHours()
+                print("Database hours updated")
+            elif inp == 4:
+                print("Fetching data...")
+                GetTotalHours()
+            elif inp == 5:
+                Settings()
+            #If the user enters the exit number, break out of the loop and therefore end the program.
+            elif inp == EXITNUM:
+                run = False
+                continue
+            #If the user input is out of range, reprompt the user
+            else:
+                print("Invalid choice")
+
+
 #Before running the loop, setup the data spacing dictionary
 SetupDataSpacing()
-
-
-EXITNUM = 6
-run = True
-while run: #Main loop
-    print(f'''\nMake your choice:
-1. Print data
-2. Search data
-3. Update database hours
-4. Get total database hours
-5. Settings
-{EXITNUM}. Exit''')
-    #Attempt to make the input an integer, reprompt otherwise
-    try:
-        inp = int(input("> "))
-    except:
-        print("Invalid input")
-    else:
-        if inp == 1:
-            HandlePrint()
-            print()
-        elif inp == 2:
-            SearchData()
-        elif inp == 3:
-            print("Updating...")
-            UpdateDatabaseHours()
-            print("Database hours updated")
-        elif inp == 4:
-            print("Fetching data...")
-            GetTotalHours()
-        elif inp == 5:
-            Settings()
-        #If the user enters the exit number, break out of the loop and therefore end the program.
-        elif inp == EXITNUM:
-            run = False
-            continue
-        #If the user input is out of range, reprompt the user
-        else:
-            print("Invalid choice")
-
-
+#Main interface
+if __name__ == "__main__":
+    MainLoop()
