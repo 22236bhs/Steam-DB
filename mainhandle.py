@@ -285,7 +285,7 @@ def Settings():
             if userinp == 1:
                 GetId = True
                 while GetId: #get id loop
-                    print("\nEnter your steam id\nType \"/back\" to go back")
+                    print(f"\nEnter your steam id\nYour current steam id is {datajson["steam_id"]}\nType \"/back\" to go back")
                     steamid = input("> ")
                     #Break out of the get id loop and back to the main selection loop if the user types "/back"
                     if steamid == "/back":
