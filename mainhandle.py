@@ -230,9 +230,13 @@ def SearchData():
     {search}
     {order}''')
                 
-                print("Results:\n")
                 #Run the PrintOutData function to format all of the data and print it
-                PrintOutData(results, ["name", "studios.studio_name", "hours", "steam_release_date"])
+                if len(results) > 0:
+                    print("Results:\n")
+                    PrintOutData(results, ["name", "studios.studio_name", "hours", "steam_release_date"])
+                    
+                else:
+                    print("No data found.")
                 #End both of the loops
                 setuptosearch = False
                 selectuserinp = False
@@ -442,7 +446,10 @@ def HandlePrint():
                     sqlrun += ";"
                     results = ExeQuery(sqlrun)
                     #Print out the results formatted using the PrintOutData function
-                    PrintOutData(results, userinp)
+                    if len(results) > 0:
+                        PrintOutData(results, userinp)
+                    else:
+                        print("No data found.")
                     #End the function
                     return 0
                     
