@@ -6,7 +6,7 @@ import SteamHandle, MakeDb, ErrorHandle
 os.chdir("C:/Users/ojkit/Documents/Steam DB") #Directory
 
 #Constants
-DATABASE = "steam_db.db"
+DATABASE = "SteamDb.db"
 JSONFILE = "data.json"
 DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_release_date"} #Convert user input as number to print option
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""} #Convert user input as number to sort option
