@@ -12,7 +12,7 @@ with open("data.json") as f:
 # Format:  {"steam_id": "id", "api_key": "key"}
 # Where "id" is replaced with the steam id and "key" is replaced with the api key 
 API_KEY = data["api_key"]
-steam_id = data["steam_id"]
+steamId = data["steam_id"]
 
 #Assign each month abbreviation a 2 digit number corresponding to their order
 months = {"jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
@@ -22,14 +22,14 @@ days = {"1": "01", "2": "02", "3": "03", "4": "04", "5": "05", "6": "06", "7": "
         "9": "09"}
 
 
-def GetHours(game_ids):
+def GetHours(gameIds):
     '''Takes the list argument of tuples [(id, game_id), ...]
        and returns a list of tuples [(id, hours), ...]'''
-    global data, steam_id, API_KEY
+    global data, steamId, API_KEY
     #Update the steam id with the current one in the json file
     UpdateId()
     #Url to retrieve the game hours of the user's steam library
-    url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={steam_id}&format=json'
+    url = f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={steamId}&format=json'
     #Attempt a connection, return an error code if it fails
     try:
         response = requests.get(url)
@@ -44,30 +44,30 @@ def GetHours(game_ids):
             return 12
         #If the correct keys are in the dictionary
         if 'response' in data and 'games' in data['response']:
-                finallist = []
+                finalList = []
                 #Go through each game dictionary and go through each tuple in the given list,
                 #and add the hours of the game with the corresponding id to the list if the game id in the tuple,
                 #equals the game id in dictionary
                 for game in data['response']['games']:
-                    for entry in game_ids:
+                    for entry in gameIds:
                         if game['appid'] == entry[1]:
-                            finallist.append((entry[0], round((game['playtime_forever'] / 60), 1)))
-                return finallist
+                            finalList.append((entry[0], round((game['playtime_forever'] / 60), 1)))
+                return finalList
     else:
         return 11
 
 
 
-def GetGameDetails(appid, language='english'):
+def GetGameDetails(appId, language='english'):
     '''Returns the release date in two forms and the developer of the given appid'''
-    global data, steam_id, API_KEY
+    global data, steamId, API_KEY
     #Update the steam id with the id in the json file
     UpdateId()
     #Url for accessing the app's, corresponding to the given id, data
     url = f'https://store.steampowered.com/api/appdetails'
     #Parameters to add with the request. The appid, and language format
     params = {
-        'appids': appid,
+        'appids': appId,
         'cc': 'us',  
         'l': language  
     }
@@ -82,19 +82,19 @@ def GetGameDetails(appid, language='english'):
     except:
         return 12
     #If the corrects keys are in the dictionary, access the release date and developers
-    if str(appid) in data and data[str(appid)]['success']:
-        details = data[str(appid)]['data']
-        release_date = details.get('release_date', {}).get('date')
+    if str(appId) in data and data[str(appId)]['success']:
+        details = data[str(appId)]['data']
+        releaseDate = details.get('release_date', {}).get('date')
         developer = details.get('developers', [])
         #Attempt to convert the release date to a tuple with 2 date formats, return None if it fails
         try:
-            ConvertDate(release_date)
+            ConvertDate(releaseDate)
         except:
             return None
         #Return the release date tuple and the first developer entry in a dictionary
         else:
             return {
-                'release_date': ConvertDate(release_date),
+                'release_date': ConvertDate(releaseDate),
                 'developer': developer[0],
             }
     return None
@@ -112,15 +112,15 @@ def ConvertDate(date):
     if date[0] in days:
         date[0] = days[date[0]]
     #Return a dictionary of the date in DD/MM/YYYY form and a pure integer form YYYYMMDD
-    strdate = "/".join(date)
-    intdate = int(date[2] + date[1] + date[0])
-    return {"strdate": strdate, "intdate": intdate}
+    strDate = "/".join(date)
+    intDate = int(date[2] + date[1] + date[0])
+    return {"strdate": strDate, "intdate": intDate}
 
 
 
 def GetBasicData():
     '''Gets the appid, name and hours of the user's steam library'''
-    global data, steam_id, API_KEY
+    global data, steamId, API_KEY
     #Update the steam id with the id in the json file
     UpdateId()
     #Url for getting basic data about the user's owned games
@@ -128,7 +128,7 @@ def GetBasicData():
 
     params = {
         'key': API_KEY,
-        'steamid': steam_id,
+        'steamid': steamId,
         'format': 'json',
         'include_appinfo': True,  
         'include_played_free_games': True  
@@ -152,14 +152,14 @@ def GetBasicData():
             tup = {}
             appid = game.get('appid')
             name = game.get('name')
-            playtime_forever = game.get('playtime_forever')
+            playtimeForever = game.get('playtime_forever')
             #Convert the playtime to hour form and round to 1dcp
-            playtime_forever = round((playtime_forever / 60), 1)
+            playtimeForever = round((playtimeForever / 60), 1)
             #If the user has played more or equal to one hour of the game, add the game data to a list
-            if playtime_forever >= 1:
+            if playtimeForever >= 1:
                 tup["appid"] = appid
                 tup["name"] = name
-                tup["playtime"] = playtime_forever
+                tup["playtime"] = playtimeForever
                 list.append(tup)
         #Return the game list at the end
         return list
@@ -170,40 +170,40 @@ def GetBasicData():
 def CompileData():
     '''Accesses the GetBasicData and GetGameDetails functions and combines their data'''
     #Get basic data about the users library
-    basicdata = GetBasicData()
+    basicData = GetBasicData()
     #If the result is an integer, return the integer
-    if isinstance(basicdata, int):
-        return basicdata
+    if isinstance(basicData, int):
+        return basicData
     #If the result is something
-    if basicdata:
+    if basicData:
         
-        blacklist = []
+        blackList = []
         #For each game in the basic data list, add to the list the release date and the developer of the game
-        for i in range(len(basicdata)):
-            moredetails = GetGameDetails(basicdata[i]["appid"])
+        for i in range(len(basicData)):
+            moreDetails = GetGameDetails(basicData[i]["appid"])
             #If the extra details returns an integer, return the integer
-            if isinstance(moredetails, int):
-                return moredetails
+            if isinstance(moreDetails, int):
+                return moreDetails
             #If the more details is something, add the details to the game dictionary
-            if moredetails:
-                basicdata[i]["release_date"] = moredetails["release_date"]
-                basicdata[i]["developer"] = moredetails["developer"]
+            if moreDetails:
+                basicData[i]["release_date"] = moreDetails["release_date"]
+                basicData[i]["developer"] = moreDetails["developer"]
             #Add the current iteration in the loop to a blacklist if the more details is None
             else:
-                blacklist.append(i)
+                blackList.append(i)
         final = []
         #Go through each game and add it to a new list if it isn't blacklisted
-        for i in range(len(basicdata)):
-            if i in blacklist:
+        for i in range(len(basicData)):
+            if i in blackList:
                 continue
-            final.append(basicdata[i])
+            final.append(basicData[i])
         return final
     else:
         return None
 
 def TestId(id):
     '''Tests if the argument is a valid steam id'''
-    global steam_id, data, API_KEY
+    global steamId, data, API_KEY
     #Update the steam id with the id in the json file
     UpdateId()
     #Url for getting the user's owned games
@@ -217,7 +217,7 @@ def TestId(id):
     if response.status_code == 200:
         #Return an error code if the response cannot be converted, return True if it doesn't fail
         try:
-            jsontest = response.json()
+            jsonTest = response.json()
         except:
             return 12
         else:
@@ -228,11 +228,11 @@ def TestId(id):
 
 def TestConnection():
     '''Checks if there is a proper connection to Steam'''
-    global steam_id, data, API_KEY
+    global steamId, data, API_KEY
     #Update the steam id with the id in the json file
     UpdateId()
     #Url for getting the user's owned games
-    url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={steam_id}&format=json"
+    url = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={steamId}&format=json"
     #Attempt to push the request to steam,
     #Return True if it succeeds, return False if it fails
     try:
@@ -247,9 +247,9 @@ def TestConnection():
 
 def UpdateId():
     '''Update the steam id with the id in the json file'''
-    global steam_id, data
+    global steamId, data
     #Load the json data and update the accessible steam id with the one in the json file
     with open('data.json') as f:
         data = json.load(f)
-    steam_id = data["steam_id"]
+    steamId = data["steam_id"]
 

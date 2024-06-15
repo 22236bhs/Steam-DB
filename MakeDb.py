@@ -1,5 +1,5 @@
 '''Function library for handling database table creation and deletion'''
-import steam_handle, sqlite3, os
+import SteamHandle, sqlite3, os
 
 os.chdir("C:/Users/ojkit/Documents/Steam DB")
 
@@ -7,15 +7,15 @@ os.chdir("C:/Users/ojkit/Documents/Steam DB")
 def Cleanse(list):
     '''Cleanses the names in the list of any strange characters like a trademark'''
     #String of accepted characters
-    validchar = "qwertyuiopasdfghjklzxcvbnm1234567890!@#$%^&*()`~[]}{|;\':\"\\,./<>? "
-    #Go through each dictionary in the list and replace the name with the same name purged of all characters not in "validchar"
+    validChar = "qwertyuiopasdfghjklzxcvbnm1234567890!@#$%^&*()`~[]}{|;\':\"\\,./<>? "
+    #Go through each dictionary in the list and replace the name with the same name purged of all characters not in "validChar"
     for game in list:
-        oldname = game['name']
-        newname = ""
-        for char in oldname:
-            if char.lower() in validchar:
-                newname += char
-        game['name'] = newname
+        oldName = game['name']
+        newName = ""
+        for char in oldName:
+            if char.lower() in validChar:
+                newName += char
+        game['name'] = newName
     return list
 
 def MakeDb(database):
@@ -23,10 +23,10 @@ def MakeDb(database):
     #Run the CompileData function from the steam_handle file and assign the result to a variable
     with sqlite3.connect(database) as db:
         print("Compiling steam library data...")
-        gamedata = steam_handle.CompileData()
+        gameData = SteamHandle.CompileData()
         #If the result is an integer, return the result
-        if isinstance(gamedata, int):
-            return gamedata
+        if isinstance(gameData, int):
+            return gameData
         print("Creating database...")
         #Delete the "steam_library" and "studios" table from the database
         DeleteTables(database)
@@ -48,32 +48,32 @@ def MakeDb(database):
         
         
         #Cleanse all of the names in the results from unwanted characters like trademarks
-        gamedata = Cleanse(gamedata)
+        gameData = Cleanse(gameData)
         #Go through all of the game data and sort it into the steam_library table excluding the studio_id column
         print("Sorting data...")
-        for data in gamedata:
+        for data in gameData:
             cursor.execute('''INSERT INTO steam_library (name,  hours, steam_release_date, date_order, game_id, lower_name)
     VALUES (?, ?, ?, ?, ?, ?)
     ''', (data["name"], data["playtime"], data["release_date"]["strdate"], data["release_date"]["intdate"], data["appid"], (data["name"]).lower()))
         #Add all of the unique developers in the game data to a list
-        studiolist = []
-        for data in gamedata:
-            if data['developer'] not in studiolist:
-                studiolist.append(data['developer'])
+        studioList = []
+        for data in gameData:
+            if data['developer'] not in studioList:
+                studioList.append(data['developer'])
         #Add the each developer to the studios table
-        for dev in studiolist:
+        for dev in studioList:
             cursor.execute("INSERT INTO studios (studio_name, studio_name_lower) VALUES (?, ?)", (dev, dev.lower()))
         #Go through all of the developers in the studios table and put them in a dictionary,
         #with their value as their id in the studios table
         cursor.execute("SELECT id, studio_name FROM studios;")
         devs = cursor.fetchall()
-        devsdict = {}
+        devsDict = {}
         for dev in devs:
-            devsdict[dev[1]] = dev[0]
+            devsDict[dev[1]] = dev[0]
         #Go through each game and assign their studio_id column to the corresponding id,
         #of their developer, in the dictionary
-        for data in gamedata:
-            cursor.execute(f"UPDATE steam_library SET studio_id = {devsdict[data["developer"]]} WHERE game_id = {data["appid"]}")
+        for data in gameData:
+            cursor.execute(f"UPDATE steam_library SET studio_id = {devsDict[data["developer"]]} WHERE game_id = {data["appid"]}")
         print("Database finished.")
 
 def DeleteTables(database): 
@@ -88,5 +88,5 @@ def DeleteTables(database):
         #Execute the queries in the database to remove the tables
         with sqlite3.connect(database) as db:
             cursor = db.cursor()
-            db.execute("DROP TABLE steam_library;")
-            db.execute("DROP TABLE studios;")
+            cursor.execute("DROP TABLE steam_library;")
+            cursor.execute("DROP TABLE studios;")

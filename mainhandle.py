@@ -1,7 +1,7 @@
 '''File for input/output operations'''
 import sqlite3, json, os
 
-import steam_handle, make_db, error_handle
+import SteamHandle, MakeDb, ErrorHandle
 
 os.chdir("C:/Users/ojkit/Documents/Steam DB") #Directory
 
@@ -12,38 +12,38 @@ DATAKEYPRINT = {1: "name", 2: "studios.studio_name", 3: "hours", 4: "steam_relea
 DATAKEYSORT = {1: "hours DESC", 2: "date_order DESC", 3: "lower_name ASC", 4: ""} #Convert user input as number to sort option
 DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio", "steam_release_date": "Release date"} #Convert the key to a string suitable for display
 
-dataspacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_date": 17} #The allowed spacing when printing corresponding data
+dataSpacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_date": 17} #The allowed spacing when printing corresponding data
 
 with open(JSONFILE) as js: #Get json file data
-    datajson = json.load(js)
+    dataJson = json.load(js)
 
 def PrintOutData(data, format):
     '''Prints out each tuple in data according to the format. The size of the tuples and the format must be the same'''
-    TotalSpace = 5
-    sep = TotalSpace
+    totalSpace = 5
+    sep = totalSpace
     for i in range(len(format)): #Get the maximum length of what can be printed out. used for the seperating line
-        TotalSpace += dataspacing[format[i]] 
-    FinalPrint = " " * sep #Start the header printing with "sep" spaces
+        totalSpace += dataSpacing[format[i]] 
+    finalPrint = " " * sep #Start the header printing with "sep" spaces
     for i in range(len(format)): #Add each header in suitable display formet and add the correct amount of spaces afterwards
-        FinalPrint += SpacingCalc(DATADISPLAY[format[i]], format[i])
-    print(FinalPrint)
+        finalPrint += SpacingCalc(DATADISPLAY[format[i]], format[i])
+    print(finalPrint)
     
-    print("-" * TotalSpace) #Add a line to seperate data
+    print("-" * totalSpace) #Add a line to seperate data
     if len(data) > 0: #If there is data to print
         for a in range(len(data)): #For each tuple in the data list as "a"
-            FinalPrint = " " * sep #Start the line with "sep" amount of spaces
+            finalPrint = " " * sep #Start the line with "sep" amount of spaces
             for i in range(len(data[a])): #For each entry in the selected tuple
-                FinalPrint += SpacingCalc(str(data[a][i]), format[i]) #Add the entry to FinalPrint with the correct amount of spaces
-            print(FinalPrint) #Print the finished line
-            print("-" * TotalSpace) #Add a line to seperate data
+                finalPrint += SpacingCalc(str(data[a][i]), format[i]) #Add the entry to FinalPrint with the correct amount of spaces
+            print(finalPrint) #Print the finished line
+            print("-" * totalSpace) #Add a line to seperate data
 
 
 
-def ExeQuery(execute):
+def ExeQuery(query):
     '''Executes given query in the database'''
     with sqlite3.connect(DATABASE) as f:
         cursor = f.cursor()
-        cursor.execute(execute)
+        cursor.execute(query)
         results = cursor.fetchall()
         return results
 
@@ -53,40 +53,40 @@ def ExeQuery(execute):
 
 def SetupDataSpacing():
     '''Setup the spacing of printing of the studio name and game name'''
-    global dataspacing #Access the dataspacing dictionary
-    maxnamelength = 0   #Variables for the max length of each value type
-    maxstudiolength = 0
-    maxhourlength = 0
+    global dataSpacing #Access the dataSpacing dictionary
+    maxNameLength = 0   #Variables for the max length of each value type
+    maxStudioLength = 0
+    maxHourLength = 0
     try:
         with open(DATABASE) as test:
             pass
         #Access the all of the data that can be printed out excluding release date
         results = ExeQuery("SELECT name, studios.studio_name, hours FROM steam_library JOIN studios ON steam_library.studio_id = studios.id;") 
         for result in results: #Go through all of the data and assign the variables with the longest length of the corresponding data
-            if len(result[0]) > maxnamelength:
-                maxnamelength = len(result[0])
-            if len(result[1]) > maxstudiolength:
-                maxstudiolength = len(result[1])
-            if len(str(result[2])) > maxhourlength:
-                maxhourlength = len(str(result[2]))
+            if len(result[0]) > maxNameLength:
+                maxNameLength = len(result[0])
+            if len(result[1]) > maxStudioLength:
+                maxStudioLength = len(result[1])
+            if len(str(result[2])) > maxHourLength:
+                maxHourLength = len(str(result[2]))
         #If a length isn't longer than it's corresponding header, set the header length as the largest length
-        if len("Name") > maxnamelength:
-            maxnamelength = len("Name")
-        if len("Hours") > maxhourlength:
-            maxhourlength = len("Hours")
-        if len("Studio") > maxstudiolength:
-            maxstudiolength = len("Studio")
+        if len("Name") > maxNameLength:
+            maxNameLength = len("Name")
+        if len("Hours") > maxHourLength:
+            maxHourLength = len("Hours")
+        if len("Studio") > maxStudioLength:
+            maxStudioLength = len("Studio")
         
     except:
         pass
     #Add 5 to each to add some space between the longest value of it's category and the next value
-    maxnamelength += 5
-    maxstudiolength += 5
-    maxhourlength += 5
+    maxNameLength += 5
+    maxStudioLength += 5
+    maxHourLength += 5
     #Add the lengths to a dictionary
-    dataspacing["name"] = maxnamelength
-    dataspacing["studios.studio_name"] = maxstudiolength
-    dataspacing["hours"] = maxhourlength
+    dataSpacing["name"] = maxNameLength
+    dataSpacing["studios.studio_name"] = maxStudioLength
+    dataSpacing["hours"] = maxHourLength
 
 
 
@@ -99,13 +99,13 @@ def ConvertDate(date):
 
 def SpacingCalc(string, key):
     '''Uses the given key to determine how much space should be left after the string and returns it'''
-    if key not in dataspacing:
+    if key not in dataSpacing:
         return False
     else:
         #Make a variable and add the string plus the amount of remaining space allowed
         final = ""
         final += string
-        final += (" " * (dataspacing[key] - len(string)))
+        final += (" " * (dataSpacing[key] - len(string)))
         return final
         
 
@@ -115,21 +115,21 @@ def UpdateDatabaseHours():
     execute = "SELECT id, game_id FROM steam_library;"
     results = ExeQuery(execute)
     #Replace the game id in each tuple with the corresponding hours the user has
-    newresults = steam_handle.GetHours(results)
+    newResults = SteamHandle.GetHours(results)
     #if the function returned an error, return nothing
-    if error_handle.ErrorCheck(newresults):
+    if ErrorHandle.ErrorCheck(newResults):
         return 0
     #Go through each tuple in the results and update the database with those new hours
-    for tup in newresults:
+    for tup in newResults:
         ExeQuery(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
-    #Remake the dataspacing dictionary
+    #Remake the dataSpacing dictionary
     SetupDataSpacing()
 
 
 def SearchData():
     '''Searches the database for custom matches'''
     #Dictionary to assign variables depending on the chosen option
-    keydict = {1: {"search": "WHERE steam_library.lower_name LIKE \"%",
+    keyDict = {1: {"search": "WHERE steam_library.lower_name LIKE \"%",
                     "join": "%\"",
                     "order": " ORDER BY steam_library.lower_name ASC;",
                     "date": False,
@@ -159,8 +159,8 @@ def SearchData():
                     "order": " ORDER BY steam_library.date_order DESC;",
                     "date": True,
                     "integer": False}}
-    selectuserinp = True
-    while selectuserinp: #Search by loop
+    selectUserInp = True
+    while selectUserInp: #Search by loop
         print('''\nChoose what to search by
     1. Name
     2. Studio
@@ -169,44 +169,44 @@ def SearchData():
     5. Before release date
     6. After release date
     7. Back''')
-        userinp = input("> ")
+        userInp = input("> ")
         try: #Check if the input is an integer
-            userinp = int(userinp)
+            userInp = int(userInp)
         except:
             print("Invalid input")
         else:
             #Check if the user input is the go back option
-            if userinp == 7:
+            if userInp == 7:
                 break
             #If the user input is a valid option, assign the variables to the chosen option
-            elif userinp in keydict:
-                order = keydict[userinp]["order"]
-                search = keydict[userinp]["search"]
-                join = keydict[userinp]["join"]
-                date = keydict[userinp]["date"]
-                integer = keydict[userinp]["integer"]  
+            elif userInp in keyDict:
+                order = keyDict[userInp]["order"]
+                search = keyDict[userInp]["search"]
+                join = keyDict[userInp]["join"]
+                date = keyDict[userInp]["date"]
+                integer = keyDict[userInp]["integer"]  
             #If the user input is out of range, restart the search by loop    
             else:
                 print("Invalid option")
                 continue
 
-            setuptosearch = True
-            while setuptosearch: #Search loop
+            setupToSearch = True
+            while setupToSearch: #Search loop
                 print("\nEnter what to search")
                 
                 if date: #If the user is searching for date, print out the additional info
                     print("Enter the date in the format (DD/MM/YYYY) ")
                 print("Type \"/back\" to go back")
-                tosearch = input("> ")
+                toSearch = input("> ")
                 #break out of the search loop and go back to the search by loop if the user types "/back"
-                if tosearch == "/back":
-                    setuptosearch = False
+                if toSearch == "/back":
+                    setupToSearch = False
                     continue
                 #Reprompt the user if they are searching by number and don't input a number
                 elif integer:
                     try:
-                        tosearch = float(tosearch)
-                        tosearch = str(tosearch)
+                        toSearch = float(toSearch)
+                        toSearch = str(toSearch)
                     except:
                         print("Invalid input, must be number")
                         continue
@@ -214,15 +214,15 @@ def SearchData():
                 #Attempt to convert the user input to a date format fit for searching
                 elif date:
                     try:
-                        tosearch = ConvertDate(tosearch)
+                        toSearch = ConvertDate(toSearch)
                     except:
                         print("Invalid input")
                         continue
-                    if len(tosearch) != 8:
+                    if len(toSearch) != 8:
                         print("Invalid date")
                         continue
                 #Add the previous variables together in one query and execute it in the database
-                search += tosearch
+                search += toSearch
                 search += join
                 results = ExeQuery(f'''SELECT steam_library.name, studios.studio_name, steam_library.hours, steam_library.steam_release_date
     FROM steam_library
@@ -238,8 +238,8 @@ def SearchData():
                 else:
                     print("No data found.")
                 #End both of the loops
-                setuptosearch = False
-                selectuserinp = False
+                setupToSearch = False
+                selectUserInp = False
             
 
             
@@ -253,8 +253,8 @@ def GetTotalHours():
     print(f"Total hours: {round(total, 1)} hours")
     #Get the amount of entries in the database and divide the total hours,
     #by the game count to get the average hours per game
-    gamecount = len(results)
-    average = total / gamecount
+    gameCount = len(results)
+    average = total / gameCount
     print(f"Average hours: {round(average, 1)} hours")
 
 
@@ -271,58 +271,58 @@ def IsInt(i):
 
 def Settings():
     '''Settings section of the interface'''
-    global datajson
+    global dataJson
     BACKNUM = 3
-    MainSelect = True
-    while MainSelect: #Main selection loop
+    mainSelect = True
+    while mainSelect: #Main selection loop
         print(f'''\n1. Change steam id
 2. Remake steam database
 {BACKNUM}. Back''')
-        userinp = input("> ")
+        userInp = input("> ")
         #Check if the user input is an integer
         try:
-            userinp = int(userinp)
+            userInp = int(userInp)
         except:
             print("Invalid input")
             continue
         else:
-            if userinp == 1:
-                GetId = True
-                while GetId: #get id loop
-                    print(f"\nEnter your steam id\nYour current steam id is {datajson["steam_id"]}\nType \"/back\" to go back")
-                    steamid = input("> ")
+            if userInp == 1:
+                getId = True
+                while getId: #get id loop
+                    print(f"\nEnter your steam id\nYour current steam id is {dataJson["steam_id"]}\nType \"/back\" to go back")
+                    steamId = input("> ")
                     #Break out of the get id loop and back to the main selection loop if the user types "/back"
-                    if steamid == "/back":
-                        GetId = False
+                    if steamId == "/back":
+                        getId = False
                         continue
                     #Attempt to convert the input to integer, reprompt the user if it fails
                     try:
-                        steamid = int(steamid)
+                        steamId = int(steamId)
                     except:
                         print("Invalid input")
                         continue
                     else:
                         #Test if the id is a valid steam id, reprompt the user if it isn't or an internet error occurs 
-                        idtest = steam_handle.TestId(str(steamid))
+                        idtest = SteamHandle.TestId(str(steamId))
                         
                         if not idtest:
                             print("Invalid Steam id")
                             continue
-                        if error_handle.ErrorCheck(idtest):
+                        if ErrorHandle.ErrorCheck(idtest):
                             continue
                         #Update the json file with the new steam id and go back to the main selection loops
                         if idtest:
                             print("Steam id updated")
-                            datajson["steam_id"] = str(steamid)
+                            dataJson["steam_id"] = str(steamId)
                             with open(JSONFILE, 'w') as js:
-                                json.dump(datajson, js)
-                            GetId = False
+                                json.dump(dataJson, js)
+                            getId = False
                             continue
                         
                     
-            elif userinp == 2:
-                RedoDatabase = True
-                while RedoDatabase: #Database creation loop
+            elif userInp == 2:
+                redoDatabase = True
+                while redoDatabase: #Database creation loop
                     print('''\nAre you sure you want to redo the database?
 The old data will be DELETED and replaced with new data.
 Note: (Some games that are unfit for formatting in the database,
@@ -333,23 +333,23 @@ set to public in order for the generation to work)\n''')
                     proceed = input("Proceed? (Y/N)\n> ").lower()
                     #Break out of the database creation loop and return to the main selection loop if the user types "n"
                     if proceed == "n":
-                        RedoDatabase = False
+                        redoDatabase = False
                         continue
                     elif proceed == "y":
                         #Test the internet connection, reprompt the user if an error occurs
-                        if steam_handle.TestConnection():
+                        if SteamHandle.TestConnection():
                             #Create the database if it for some reason, doesn't exist
                             with sqlite3.connect(DATABASE) as test:
                                 pass
                             #Create the database and assign the potential function return to a variable
-                            check = make_db.MakeDb(DATABASE)
+                            check = MakeDb.MakeDb(DATABASE)
                             #If the function return is an error code, break out of the database creation loop and return to the main selection loop
-                            if error_handle.ErrorCheck(check):
-                                RedoDatabase = False
+                            if ErrorHandle.ErrorCheck(check):
+                                redoDatabase = False
                                 continue
                             #Redo the data spacing dictionary after the new database is compiled and return to the main selection loop
                             SetupDataSpacing()
-                            RedoDatabase = False
+                            redoDatabase = False
                             continue
                         else:
                             print("Connection errors")
@@ -357,7 +357,7 @@ set to public in order for the generation to work)\n''')
                     else:
                         print("Invalid input")
             #If the user option is to go back, end the function
-            elif userinp == BACKNUM:
+            elif userInp == BACKNUM:
                 return 0
             #If the user option is out of range, reprompt the user
             else:
@@ -368,34 +368,34 @@ set to public in order for the generation to work)\n''')
 
 def HandlePrint():
     '''Handles printing out data based on user inputs'''
-    global dataspacing
-    getwhatdata = True
-    while getwhatdata: #Data choice loop
+    global dataSpacing
+    getWhatData = True
+    while getWhatData: #Data choice loop
         print("\nWhat data to print?\n(Type the corresponding numbers seperated by a space)\n")
         print("1. Name\n2. Studio\n3. Hours\n4. Steam release date\n5. All\n6. Back\n")
-        userinp = input("> ")
+        userInp = input("> ")
         #If the user didn't input anything, reprompt the user
-        if not userinp:
+        if not userInp:
             print("Invalid input, try again")
             continue
         #If the user entered the go back number, end the function
         else:
-            if userinp == "6":
+            if userInp == "6":
                 return 0
             #Split the user input into a list and attempt to make each entry an integer,
             #Otherwise reprompt the user. Also reprompt the user if the list has no entries
-            userinp = userinp.split()
-            if len(userinp) == 0:
+            userInp = userInp.split()
+            if len(userInp) == 0:
                 print("Invalid input, try again")
                 continue
             try:
-                #Add each unique entry to "final" and reassign "userinp" with "final"
+                #Add each unique entry to "final" and reassign "userInp" with "final"
                 final = []
-                for i in range(len(userinp)):
-                    userinp[i] = int(userinp[i])
-                    if userinp[i] not in final:
-                        final.append(userinp[i])
-                userinp = final
+                for i in range(len(userInp)):
+                    userInp[i] = int(userInp[i])
+                    if userInp[i] not in final:
+                        final.append(userInp[i])  
+                userInp = final
             #If one of the entries isn't an integer, reprompt the user
             except:
                 print("Invalid input, try again")
@@ -404,28 +404,28 @@ def HandlePrint():
             #If 5 is detected in the list, the "all" option, preset the list and break out of the loop
             #If the conversion fails, repromt the user
             try:
-                for i in range(len(userinp)):
-                    if userinp[i] == 5:
-                        userinp = ['name', 'studios.studio_name', 'hours', 'steam_release_date']
+                for i in range(len(userInp)):
+                    if userInp[i] == 5:
+                        userInp = ['name', 'studios.studio_name', 'hours', 'steam_release_date']
                         break
-                    userinp[i] = DATAKEYPRINT[userinp[i]]
+                    userInp[i] = DATAKEYPRINT[userInp[i]]
             except:
                 print("Invalid number, try again")
                 continue
             #Combine each entry in the user input list into a string seperated by commas
-            selectstr = ", ".join(userinp)
+            selectstr = ", ".join(userInp)
             #Create the selecting part of the qury
             sqlrun = "SELECT "
             sqlrun += selectstr
             sqlrun += " FROM steam_library"
-            getdataorder = True
-            while getdataorder: #Get order loop
+            getDataOrder = True
+            while getDataOrder: #Get order loop
                 print("What will the data be ordered by?\n")
                 print("1. Hours\n2. Release date\n3. Alphabetical\n4. Default\n5. Back\n")
                 sort = input("> ")
                 #Go back to the data choice loop if the user enters 5
                 if sort == "5":
-                    getdataorder = False
+                    getDataOrder = False
                     continue
                 #Attempt to convert the input to an integer, reprompt the user if it fails
                 if IsInt(sort):
@@ -447,7 +447,7 @@ def HandlePrint():
                     results = ExeQuery(sqlrun)
                     #Print out the results formatted using the PrintOutData function
                     if len(results) > 0:
-                        PrintOutData(results, userinp)
+                        PrintOutData(results, userInp)
                     else:
                         print("No data found.")
                     #End the function
