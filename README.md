@@ -1,2 +1,4 @@
-A file named "data.json" must be in the same directory as the other files. The file should have a dictionary with "steam_id" as the steam id and "api_key" as the steam api key.
-As of writing this the program sets it's working directory to a set path that can only be changed in the code.
+The json file "data.json" is not included in the github repository because it contains my Steam API key and my steam id. The format for the json file is {"api_key": "key", "steam_id": "id"} where "key" is replaced with the Steam API key in string form and "id" is replaced with a steam id in string form.
+
+The interface options that CAN be used without a connection to steam is option 1, 2, 3, 6.
+
