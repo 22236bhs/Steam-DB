@@ -1,7 +1,5 @@
 '''Function library for handling database table creation and deletion'''
-import SteamHandle, sqlite3, os
-
-os.chdir("C:/Users/ojkit/Documents/Steam DB")
+import SteamHandle, sqlite3
 
 
 def Cleanse(list):
@@ -17,6 +15,7 @@ def Cleanse(list):
                 newName += char
         game['name'] = newName
     return list
+
 
 def MakeDb(database):
     '''Makes a databse, if it doesn't exist, of the user's steam library'''
@@ -75,6 +74,7 @@ def MakeDb(database):
         for data in gameData:
             cursor.execute(f"UPDATE steam_library SET studio_id = {devsDict[data["developer"]]} WHERE game_id = {data["appid"]}")
         print("Database finished.")
+
 
 def DeleteTables(database): 
     '''Delete the "steam_library" and "studios" table from the given database directory'''

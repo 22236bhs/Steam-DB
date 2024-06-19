@@ -1,7 +1,6 @@
 '''Function library to interface with steam'''
-import requests
-import json, os
-os.chdir("C:/Users/ojkit/Documents/Steam DB")
+import requests, json
+
 #Load the json file into a variable
 with open("data.json") as f:
     data = json.load(f)
@@ -57,7 +56,6 @@ def GetHours(gameIds):
         return 11
 
 
-
 def GetGameDetails(appId, language='english'):
     '''Returns the release date in two forms and the developer of the given appid'''
     global data, steamId, API_KEY
@@ -99,6 +97,7 @@ def GetGameDetails(appId, language='english'):
             }
     return None
 
+
 def ConvertDate(date):
     '''Converts month day, year to a tuple containing (dd/mm/yyyy, yyyymmdd)'''
     #Remove the comma and split the argument into a list containing [month, day, year]
@@ -115,7 +114,6 @@ def ConvertDate(date):
     strDate = "/".join(date)
     intDate = int(date[2] + date[1] + date[0])
     return {"strdate": strDate, "intdate": intDate}
-
 
 
 def GetBasicData():
@@ -167,6 +165,7 @@ def GetBasicData():
     else:
         return None
 
+
 def CompileData():
     '''Accesses the GetBasicData and GetGameDetails functions and combines their data'''
     #Get basic data about the users library
@@ -200,6 +199,7 @@ def CompileData():
         return final
     else:
         return None
+
 
 def TestId(id):
     '''Tests if the argument is a valid steam id'''
@@ -243,8 +243,6 @@ def TestConnection():
         return True
 
 
-
-
 def UpdateId():
     '''Update the steam id with the id in the json file'''
     global steamId, data
@@ -252,4 +250,3 @@ def UpdateId():
     with open('data.json') as f:
         data = json.load(f)
     steamId = data["steam_id"]
-

@@ -1,9 +1,8 @@
 '''File for input/output operations'''
-import sqlite3, json, os
-
+import sqlite3, json
 import SteamHandle, MakeDb, ErrorHandle
 
-os.chdir("C:/Users/ojkit/Documents/Steam DB") #Directory
+
 
 #Constants
 DATABASE = "SteamDb.db"
@@ -14,8 +13,11 @@ DATADISPLAY = {"name": "Name", "hours": "Hours", "studios.studio_name": "Studio"
 
 dataSpacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_date": 17} #The allowed spacing when printing corresponding data
 
-with open(JSONFILE) as js: #Get json file data
-    dataJson = json.load(js)
+try:
+    with open(JSONFILE) as js: #Get json file data
+        dataJson = json.load(js)
+except:
+    dataJson = {"steam_id": "", "api_key": ""}
 
 def PrintOutData(data, format):
     '''Prints out each tuple in data according to the format. The size of the tuples and the format must be the same'''
@@ -38,7 +40,6 @@ def PrintOutData(data, format):
             print("-" * totalSpace) #Add a line to seperate data
 
 
-
 def ExeQuery(query):
     '''Executes given query in the database'''
     with sqlite3.connect(DATABASE) as f:
@@ -46,9 +47,6 @@ def ExeQuery(query):
         cursor.execute(query)
         results = cursor.fetchall()
         return results
-
-
-
 
 
 def SetupDataSpacing():
@@ -76,7 +74,6 @@ def SetupDataSpacing():
             maxHourLength = len("Hours")
         if len("Studio") > maxStudioLength:
             maxStudioLength = len("Studio")
-        
     except:
         pass
     #Add 5 to each to add some space between the longest value of it's category and the next value
@@ -87,7 +84,6 @@ def SetupDataSpacing():
     dataSpacing["name"] = maxNameLength
     dataSpacing["studios.studio_name"] = maxStudioLength
     dataSpacing["hours"] = maxHourLength
-
 
 
 def ConvertDate(date):
@@ -106,8 +102,7 @@ def SpacingCalc(string, key):
         final = ""
         final += string
         final += (" " * (dataSpacing[key] - len(string)))
-        return final
-        
+        return final    
 
 
 def UpdateDatabaseHours():
@@ -241,8 +236,7 @@ def SearchData():
                 setupToSearch = False
                 selectUserInp = False
             
-
-            
+        
 def GetTotalHours():
     '''Prints the total hours of the database entries through the database (not through steam)'''
     results = ExeQuery("SELECT hours FROM steam_library;")
@@ -266,7 +260,6 @@ def IsInt(i):
         return False
     else:
         return True
-    
 
 
 def Settings():
@@ -365,7 +358,6 @@ set to public in order for the generation to work)\n''')
                 continue
 
 
-
 def HandlePrint():
     '''Handles printing out data based on user inputs'''
     global dataSpacing
@@ -448,6 +440,7 @@ def HandlePrint():
                     #Print out the results formatted using the PrintOutData function
                     if len(results) > 0:
                         PrintOutData(results, userInp)
+                        print()
                     else:
                         print("No data found.")
                     #End the function
@@ -462,8 +455,8 @@ def MainLoop():
         print(f'''\nMake your choice:
     1. Print data
     2. Search data
-    3. Update database hours
-    4. Get total database hours
+    3. Get total database hours
+    4. Update database hours
     5. Settings
     {EXITNUM}. Exit''')
         #Attempt to make the input an integer, reprompt otherwise
@@ -474,16 +467,16 @@ def MainLoop():
         else:
             if inp == 1:
                 HandlePrint()
-                print()
             elif inp == 2:
                 SearchData()
             elif inp == 3:
+                print("Fetching data...")
+                GetTotalHours()
+            elif inp == 4:
                 print("Updating...")
                 UpdateDatabaseHours()
                 print("Database hours updated")
-            elif inp == 4:
-                print("Fetching data...")
-                GetTotalHours()
+                
             elif inp == 5:
                 Settings()
             #If the user enters the exit number, break out of the loop and therefore end the program.
