@@ -2,8 +2,11 @@
 import requests, json
 
 #Load the json file into a variable
-with open("data.json") as f:
-    data = json.load(f)
+try:
+    with open("data.json") as f:
+        data = json.load(f)
+except:
+    data = {"steam_id": "1", "api_key": "key"}
 
 
 

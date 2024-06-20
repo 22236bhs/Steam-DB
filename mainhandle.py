@@ -16,8 +16,14 @@ dataSpacing = {"name": 0, "hours": 0, "studios.studio_name": 0, "steam_release_d
 try:
     with open(JSONFILE) as js: #Get json file data
         dataJson = json.load(js)
+    jsonSuccess = True
 except:
-    dataJson = {"steam_id": "", "api_key": ""}
+    dataJson = {"steam_id": "1", "api_key": "key"}
+    jsonSuccess = False
+    print("An error occured regarding the json file. Hours update and settings are disabled.")
+
+if dataJson["api_key"] == "key":
+    jsonSuccess = False
 
 def PrintOutData(data, format):
     '''Prints out each tuple in data according to the format. The size of the tuples and the format must be the same'''
@@ -107,18 +113,21 @@ def SpacingCalc(string, key):
 
 def UpdateDatabaseHours():
     '''Updates the database with the user's current Steam hours'''
-    execute = "SELECT id, game_id FROM steam_library;"
-    results = ExeQuery(execute)
-    #Replace the game id in each tuple with the corresponding hours the user has
-    newResults = SteamHandle.GetHours(results)
-    #if the function returned an error, return nothing
-    if ErrorHandle.ErrorCheck(newResults):
-        return 0
-    #Go through each tuple in the results and update the database with those new hours
-    for tup in newResults:
-        ExeQuery(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
-    #Remake the dataSpacing dictionary
-    SetupDataSpacing()
+    if jsonSuccess:
+        execute = "SELECT id, game_id FROM steam_library;"
+        results = ExeQuery(execute)
+        #Replace the game id in each tuple with the corresponding hours the user has
+        newResults = SteamHandle.GetHours(results)
+        #if the function returned an error, return nothing
+        if ErrorHandle.ErrorCheck(newResults):
+            return 0
+        #Go through each tuple in the results and update the database with those new hours
+        for tup in newResults:
+            ExeQuery(f"UPDATE steam_library SET hours = {tup[1]} WHERE id = {tup[0]}")
+        #Remake the dataSpacing dictionary
+        SetupDataSpacing()
+    else:
+        print("An error occured regarding the json file. Hours update is disabled.")
 
 
 def SearchData():
@@ -151,7 +160,7 @@ def SearchData():
                     "integer": False},
                 6: {"search": "WHERE steam_library.date_order >= ",
                     "join": "",
-                    "order": " ORDER BY steam_library.date_order DESC;",
+                    "order": " ORDER BY steam_library.date_order ASC;",
                     "date": True,
                     "integer": False}}
     selectUserInp = True
@@ -264,98 +273,101 @@ def IsInt(i):
 
 def Settings():
     '''Settings section of the interface'''
-    global dataJson
-    BACKNUM = 3
-    mainSelect = True
-    while mainSelect: #Main selection loop
-        print(f'''\n1. Change steam id
+    if jsonSuccess:
+        global dataJson
+        BACKNUM = 3
+        mainSelect = True
+        while mainSelect: #Main selection loop
+            print(f'''\n1. Change steam id
 2. Remake steam database
 {BACKNUM}. Back''')
-        userInp = input("> ")
-        #Check if the user input is an integer
-        try:
-            userInp = int(userInp)
-        except:
-            print("Invalid input")
-            continue
-        else:
-            if userInp == 1:
-                getId = True
-                while getId: #get id loop
-                    print(f"\nEnter your steam id\nYour current steam id is {dataJson["steam_id"]}\nType \"/back\" to go back")
-                    steamId = input("> ")
-                    #Break out of the get id loop and back to the main selection loop if the user types "/back"
-                    if steamId == "/back":
-                        getId = False
-                        continue
-                    #Attempt to convert the input to integer, reprompt the user if it fails
-                    try:
-                        steamId = int(steamId)
-                    except:
-                        print("Invalid input")
-                        continue
-                    else:
-                        #Test if the id is a valid steam id, reprompt the user if it isn't or an internet error occurs 
-                        idtest = SteamHandle.TestId(str(steamId))
-                        
-                        if not idtest:
-                            print("Invalid Steam id")
-                            continue
-                        if ErrorHandle.ErrorCheck(idtest):
-                            continue
-                        #Update the json file with the new steam id and go back to the main selection loops
-                        if idtest:
-                            print("Steam id updated")
-                            dataJson["steam_id"] = str(steamId)
-                            with open(JSONFILE, 'w') as js:
-                                json.dump(dataJson, js)
+            userInp = input("> ")
+            #Check if the user input is an integer
+            try:
+                userInp = int(userInp)
+            except:
+                print("Invalid input")
+                continue
+            else:
+                if userInp == 1:
+                    getId = True
+                    while getId: #get id loop
+                        print(f"\nEnter your steam id\nYour current steam id is {dataJson["steam_id"]}\nType \"/back\" to go back")
+                        steamId = input("> ")
+                        #Break out of the get id loop and back to the main selection loop if the user types "/back"
+                        if steamId == "/back":
                             getId = False
                             continue
+                        #Attempt to convert the input to integer, reprompt the user if it fails
+                        try:
+                            steamId = int(steamId)
+                        except:
+                            print("Invalid input")
+                            continue
+                        else:
+                            #Test if the id is a valid steam id, reprompt the user if it isn't or an internet error occurs 
+                            idtest = SteamHandle.TestId(str(steamId))
+                            
+                            if not idtest:
+                                print("Invalid Steam id")
+                                continue
+                            if ErrorHandle.ErrorCheck(idtest):
+                                continue
+                            #Update the json file with the new steam id and go back to the main selection loops
+                            if idtest:
+                                print("Steam id updated")
+                                dataJson["steam_id"] = str(steamId)
+                                with open(JSONFILE, 'w') as js:
+                                    json.dump(dataJson, js)
+                                getId = False
+                                continue
+                            
                         
-                    
-            elif userInp == 2:
-                redoDatabase = True
-                while redoDatabase: #Database creation loop
-                    print('''\nAre you sure you want to redo the database?
+                elif userInp == 2:
+                    redoDatabase = True
+                    while redoDatabase: #Database creation loop
+                        print('''\nAre you sure you want to redo the database?
 The old data will be DELETED and replaced with new data.
 Note: (Some games that are unfit for formatting in the database,
 as well as games with under 1 hour, won't be added to the database)
                           
 Note 2: (The steam account being accessed must have the library data
 set to public in order for the generation to work)\n''')
-                    proceed = input("Proceed? (Y/N)\n> ").lower()
-                    #Break out of the database creation loop and return to the main selection loop if the user types "n"
-                    if proceed == "n":
-                        redoDatabase = False
-                        continue
-                    elif proceed == "y":
-                        #Test the internet connection, reprompt the user if an error occurs
-                        if SteamHandle.TestConnection():
-                            #Create the database if it for some reason, doesn't exist
-                            with sqlite3.connect(DATABASE) as test:
-                                pass
-                            #Create the database and assign the potential function return to a variable
-                            check = MakeDb.MakeDb(DATABASE)
-                            #If the function return is an error code, break out of the database creation loop and return to the main selection loop
-                            if ErrorHandle.ErrorCheck(check):
-                                redoDatabase = False
-                                continue
-                            #Redo the data spacing dictionary after the new database is compiled and return to the main selection loop
-                            SetupDataSpacing()
+                        proceed = input("Proceed? (Y/N)\n> ").lower()
+                        #Break out of the database creation loop and return to the main selection loop if the user types "n"
+                        if proceed == "n":
                             redoDatabase = False
                             continue
+                        elif proceed == "y":
+                            #Test the internet connection, reprompt the user if an error occurs
+                            if SteamHandle.TestConnection():
+                                #Create the database if it for some reason, doesn't exist
+                                with sqlite3.connect(DATABASE) as test:
+                                    pass
+                                #Create the database and assign the potential function return to a variable
+                                check = MakeDb.MakeDb(DATABASE)
+                                #If the function return is an error code, break out of the database creation loop and return to the main selection loop
+                                if ErrorHandle.ErrorCheck(check):
+                                    redoDatabase = False
+                                    continue
+                                #Redo the data spacing dictionary after the new database is compiled and return to the main selection loop
+                                SetupDataSpacing()
+                                redoDatabase = False
+                                continue
+                            else:
+                                print("Connection errors")
+                        #Reprompt the user if the input is not "y" or "n"
                         else:
-                            print("Connection errors")
-                    #Reprompt the user if the input is not "y" or "n"
-                    else:
-                        print("Invalid input")
-            #If the user option is to go back, end the function
-            elif userInp == BACKNUM:
-                return 0
-            #If the user option is out of range, reprompt the user
-            else:
-                print("Invalid option")
-                continue
+                            print("Invalid input")
+                #If the user option is to go back, end the function
+                elif userInp == BACKNUM:
+                    return 0
+                #If the user option is out of range, reprompt the user
+                else:
+                    print("Invalid option")
+                    continue
+    else:
+        print("An error occured regarding the json file. Settings are disabled.")
 
 
 def HandlePrint():
@@ -470,7 +482,6 @@ def MainLoop():
             elif inp == 2:
                 SearchData()
             elif inp == 3:
-                print("Fetching data...")
                 GetTotalHours()
             elif inp == 4:
                 print("Updating...")
